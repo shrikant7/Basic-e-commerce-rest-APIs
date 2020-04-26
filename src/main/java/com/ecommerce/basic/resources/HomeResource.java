@@ -44,4 +44,9 @@ public class HomeResource {
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 
+	@GetMapping("/user")
+	public String user(){
+		return "Hello user";
+	}
+
 }
