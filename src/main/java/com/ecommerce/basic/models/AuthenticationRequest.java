@@ -4,23 +4,23 @@ package com.ecommerce.basic.models;
  * @author Shrikant Sharma
  */
 public class AuthenticationRequest {
-	private String userName;
+	private String username;
 	private String password;
 
 	public AuthenticationRequest() {
 	}
 
-	public AuthenticationRequest(String userName, String password) {
-		this.userName = userName;
+	public AuthenticationRequest(String username, String password) {
+		this.username = username;
 		this.password = password;
 	}
 
-	public String getUserName() {
-		return userName;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setUserName(String userName) {
-		this.userName = userName;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	public String getPassword() {
