@@ -39,7 +39,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable()
 				//allow all request without authentication for "/api/authenticate" endPoint
-				.authorizeRequests().antMatchers("/api/authenticate").permitAll()
+				.authorizeRequests().antMatchers("/api/authenticate","/api/products","/home").permitAll()
 				//and for all other request, please authenticate
 				.anyRequest().authenticated()
 				//and make session stateless on server

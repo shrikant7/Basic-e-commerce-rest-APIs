@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1>Product upload portal</h1>
+            <p>Upload product details with POST data form</p>
+        </div>
+    </div>
+    <div class="container">
+        <h1><span class="badge badge-secondary">Add New Product</span></h1>
+        <div class="alert alert-success">Product uploaded successfully</div>
+        <div class="alert alert-danger">Product is not uploaded. Error occurred!!!</div>
+                                    <div class="form-group">
+            <label for="name">Product name:</label>
+            <input type="text" class="form-control" id="name" placeholder="Enter product name" name="name">
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <input type="text" class="form-control" id="description" placeholder="Enter description" name="description">
+        </div>
+        <div class="form-group">
+            <label for="price">Price:</label>
+            <input type="text" class="form-control" id="price" placeholder="Enter price" name="price">
+        </div>
+        <form id="imageUploadForm">
+            <div class="form-group">
+                <label>Upload product image:</label>
+                <input type="file" class="form-control-file border" name="file">
+            </div>
+        </form>
+        <button type="button" class="btn btn-primary" id="btnSubmit">Submit</button>
+    </div>
+    <br/>
+    <script>
+        $(document).ready(function () {
+            $(".alert-success").hide();
+            $(".alert-danger").hide();
+            $("#btnSubmit").click(function () {
+                var form = $('#imageUploadForm')[0];
+                var data = new FormData(form);
+                var jsonDataObj = {
+                    "name": $("#name").val(),
+                    "description" : $("#description").val(),
+                    "price" : $("#price").val()
+                };
+                data.append("productJson", JSON.stringify(jsonDataObj));
+                $("#btnSubmit").prop("disabled", true);
+                $.ajax({
+                    type: "POST",
+                    enctype: 'multipart/form-data',
+                    url: "/api/products",
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    timeout: 600000,
+                    success: function (data) {
+
+                        console.log("SUCCESS : ", data);
+                        $("#btnSubmit").prop("disabled", false);
+                        $(".alert-success").show();
+                        $(".alert-danger").hide();
+                    },
+                    error: function (e) {
+                         $(".alert-success").hide();
+                         $(".alert-danger").show();
+                        console.log("ERROR : ", e);
+                        $("#btnSubmit").prop("disabled", false);
+                    }
+                });
+            });
+        });
+		</script>
+</body>
+</html>
