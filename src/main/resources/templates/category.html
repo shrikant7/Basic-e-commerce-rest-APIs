@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create category</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+</head>
+<body>
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <h1>Create new Category</h1>
+        <p>go back to product upload: <a href="/home">here</a></p>
+    </div>
+</div>
+<div class="container">
+    <form id="categoryForm" method="post" action="/api/categories">
+        <div class="form-group">
+            <label>Category name:</label>
+            <input type="text" class="form-control-file border" name="categoryName">
+        </div>
+        <input type="submit" class="btn btn-primary" id="btnSubmit" name="Submit" value="Submit"/>
+    </form>
+</div>
+</body>
+</html>

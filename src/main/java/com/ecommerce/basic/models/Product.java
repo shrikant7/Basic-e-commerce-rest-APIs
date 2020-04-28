@@ -11,52 +11,70 @@ import javax.persistence.*;
 public class Product {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int id;
+	private int productId;
 	private String name;
 	private String description;
 	private Integer price;
 	private String imageURI;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "categoryId")
+	private Category category;
+
 	public Product() {
 	}
 
-	public int getId() {
-		return id;
+	public int getProductId() {
+		return productId;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public Product setProductId(int productId) {
+		this.productId = productId;
+		return this;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
+	public Product setName(String name) {
 		this.name = name;
+		return this;
 	}
 
 	public String getDescription() {
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public Product setDescription(String description) {
 		this.description = description;
+		return this;
 	}
 
 	public Integer getPrice() {
 		return price;
 	}
 
-	public void setPrice(Integer price) {
+	public Product setPrice(Integer price) {
 		this.price = price;
+		return this;
 	}
 
 	public String getImageURI() {
 		return imageURI;
 	}
 
-	public void setImageURI(String imageURI) {
+	public Product setImageURI(String imageURI) {
 		this.imageURI = imageURI;
+		return this;
+	}
+
+	public Category getCategory() {
+		return category;
+	}
+
+	public Product setCategory(Category category) {
+		this.category = category;
+		return this;
 	}
 }

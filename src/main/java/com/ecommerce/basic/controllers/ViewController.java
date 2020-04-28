@@ -14,4 +14,9 @@ public class ViewController {
 	public String homePage() {
 		return "home";
 	}
+
+	@GetMapping("/category")
+	public String createCategory(){
+		return "category";
+	}
 }

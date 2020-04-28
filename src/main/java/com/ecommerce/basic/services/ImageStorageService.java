@@ -29,15 +29,20 @@ public class ImageStorageService {
 	}
 
 
-	public String storeImage(MultipartFile productImage) {
+	public String storeImage(int categoryId, MultipartFile productImage) {
 		String originalImageName = productImage.getOriginalFilename();
-		if(!originalImageName.endsWith(".jpg") && !originalImageName.endsWith(".jpeg") && !originalImageName.endsWith(".png")){
-			throw new FileStorageException("Sorry!! file is of INVALID extension");
+		String[] nameSplit = originalImageName.split("[.]");
+		if(nameSplit.length !=2 || (!originalImageName.endsWith(".jpg")
+				&& !originalImageName.endsWith(".jpeg") && !originalImageName.endsWith(".png"))) {
+				throw new FileStorageException("Sorry!! file is of INVALID name or extension: "+originalImageName);
 		}
 
 		try {
-			String newImageName = System.currentTimeMillis()+"_"+productImage.getOriginalFilename();
-			Path targetLocation = imageStoragePath.resolve(newImageName);
+			Path targetDirectory = imageStoragePath.resolve(String.valueOf(categoryId));
+			Files.createDirectories(targetDirectory);
+
+			String newImageName = categoryId+"_"+System.currentTimeMillis()+"."+nameSplit[1];
+			Path targetLocation = targetDirectory.resolve(newImageName);
 			Files.copy(productImage.getInputStream(),targetLocation, StandardCopyOption.REPLACE_EXISTING);
 			return newImageName;
 		} catch (Exception e) {

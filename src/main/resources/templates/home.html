@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>File Upload Demo</title>
+    <title>create a product</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
@@ -19,8 +19,10 @@
     </div>
     <div class="container">
         <h1><span class="badge badge-secondary">Add New Product</span></h1>
-        <div class="alert alert-success">Product uploaded successfully</div>
-        <div class="alert alert-danger">Product is not uploaded. Error occurred!!!</div>
+        <a href="/category">create category here</a>
+
+        <div class="alert alert-success" >Product uploaded successfully</div>
+        <div class="alert alert-danger" >Product is not uploaded. Error occurred!!!</div>
                                     <div class="form-group">
             <label for="name">Product name:</label>
             <input type="text" class="form-control" id="name" placeholder="Enter product name" name="name">
@@ -32,6 +34,10 @@
         <div class="form-group">
             <label for="price">Price:</label>
             <input type="text" class="form-control" id="price" placeholder="Enter price" name="price">
+        </div>
+        <div class="form-group">
+            <label for="categoryId">Category Id:</label>
+            <input type="text" class="form-control" id="categoryId" placeholder="Enter valid categoryId" name="categoryId">
         </div>
         <form id="imageUploadForm">
             <div class="form-group">
@@ -49,6 +55,7 @@
             $("#btnSubmit").click(function () {
                 var form = $('#imageUploadForm')[0];
                 var data = new FormData(form);
+                var categoryId =  $("#categoryId").val();
                 var jsonDataObj = {
                     "name": $("#name").val(),
                     "description" : $("#description").val(),
@@ -59,7 +66,7 @@
                 $.ajax({
                     type: "POST",
                     enctype: 'multipart/form-data',
-                    url: "/api/products",
+                    url: "/api/categories/"+categoryId+"/products",
                     data: data,
                     processData: false,
                     contentType: false,

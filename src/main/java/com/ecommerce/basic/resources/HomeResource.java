@@ -2,7 +2,9 @@ package com.ecommerce.basic.resources;
 
 import com.ecommerce.basic.models.AuthenticationRequest;
 import com.ecommerce.basic.models.AuthenticationResponse;
+import com.ecommerce.basic.models.Category;
 import com.ecommerce.basic.models.Product;
+import com.ecommerce.basic.services.CategoryService;
 import com.ecommerce.basic.services.ImageStorageService;
 import com.ecommerce.basic.services.MyUserDetailsService;
 import com.ecommerce.basic.services.ProductService;
@@ -19,8 +21,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Shrikant Sharma
@@ -38,7 +38,9 @@ public class HomeResource {
 	@Autowired
 	private ImageStorageService imageStorageService;
 	@Autowired
-private ProductService productService;
+	private ProductService productService;
+	@Autowired
+	private CategoryService categoryService;
 
 	ObjectMapper objectMapper = new ObjectMapper();
 
@@ -63,18 +65,29 @@ private ProductService productService;
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 
-	@PostMapping(value = "/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping("/categories")
+	public Category createCategory(@RequestParam("categoryName") String categoryName){
+		return categoryService.createCategory(new Category().setCategoryName(categoryName));
+	}
+
+	@PostMapping(value = "/categories/{categoryId}/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Product createProduct(
+			@PathVariable("categoryId") int categoryId,
 			@RequestParam("productJson") String productJson,
 			@RequestParam("file") MultipartFile productImage) throws JsonProcessingException {
-		String imageName = imageStorageService.storeImage(productImage);
+
+		String imageName = imageStorageService.storeImage(categoryId, productImage);
 		String imageDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath()
-										.path("downloadImage")
+										.path("downloadImage/")
 										.path(imageName).toUriString();
-		Product product = objectMapper.readValue(productJson,Product.class);
-		product.setImageURI(imageDownloadURI);
-		productService.createProduct(product);
-		return product;
+
+		Category category = categoryService.getCategoryByID(categoryId);
+
+		Product product = objectMapper.readValue(productJson,Product.class)
+				.setCategory(category)
+				.setImageURI(imageDownloadURI);
+
+		return productService.createProduct(product);
 	}
 
 }
