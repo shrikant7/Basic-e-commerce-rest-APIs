@@ -47,9 +47,41 @@
         </form>
         <button type="button" class="btn btn-primary" id="btnSubmit">Submit</button>
     </div>
+    <div class="container">
+        <h1><span class="badge badge-secondary">Product(s) List of category=2</span></h1>
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Product Picture</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
     <br/>
     <script>
+        function getProductDetails() {
+            $.ajax({url: "/api/categories/2/products", success: function(result){
+                $(".table tbody").html('');
+                if(result.length>0) {
+                    $.each(result, function( index, value ) {
+                        var htmlStr = "<tr><td>"+result[index].productId+"</td><td>"+result[index].name+"</td><td>"+result[index].description+"</td><td>"+result[index].price+"</td><td><img height=\"100\" width=\"100\" src=\""+result[index].imageURI+"\"></img></td></tr>";
+                        $(".table tbody").append(htmlStr);
+                    });
+                } else {
+                    $(".table tbody").append('<tr><td colspan="4" style="color:red;">No records to display</td></tr>');
+                }
+            }});
+        }
         $(document).ready(function () {
+            getProductDetails();
             $(".alert-success").hide();
             $(".alert-danger").hide();
             $("#btnSubmit").click(function () {
@@ -78,6 +110,7 @@
                         $("#btnSubmit").prop("disabled", false);
                         $(".alert-success").show();
                         $(".alert-danger").hide();
+                        getProductDetails();
                     },
                     error: function (e) {
                          $(".alert-success").hide();

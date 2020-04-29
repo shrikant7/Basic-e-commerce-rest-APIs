@@ -12,6 +12,8 @@ import com.ecommerce.basic.utils.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -95,7 +99,7 @@ public class HomeResource {
 
 		String imageName = imageStorageService.storeImage(categoryId, productImage);
 		String imageDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath()
-										.path("downloadImage/")
+										.path("api/downloadImage/")
 										.path(imageName).toUriString();
 
 		Category category = categoryService.getCategoryByID(categoryId);
@@ -105,6 +109,25 @@ public class HomeResource {
 				.setImageURI(imageDownloadURI);
 
 		return productService.createProduct(product);
+	}
+
+	@GetMapping("/downloadImage/{imageName}")
+	public ResponseEntity<Resource> downloadFile(@PathVariable String imageName, HttpServletRequest request){
+		Resource resource = imageStorageService.loadImageAsResource(imageName);
+		String contentType = null;
+		try{
+			contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+		} catch (IOException e){
+			e.printStackTrace();
+		}
+
+		//if we are not able to determine it contentType then mark it unknown binary object;
+		if(contentType == null){
+			contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+		}
+		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
+				.header(HttpHeaders.CONTENT_DISPOSITION,resource.getFilename())
+				.body(resource);
 	}
 
 }
