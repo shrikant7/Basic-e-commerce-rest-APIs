@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.List;
+
 /**
  * @author Shrikant Sharma
  */
@@ -65,9 +67,24 @@ public class HomeResource {
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 
+	@GetMapping("/categories")
+	public List<Category> getAllCategories() {
+		return categoryService.getAllCategories();
+	}
+
+	@GetMapping("/categories/{categoryId}")
+	public Category getCategoryByCategoryId(@PathVariable int categoryId){
+		return categoryService.getCategoryByID(categoryId);
+	}
+
 	@PostMapping("/categories")
 	public Category createCategory(@RequestParam("categoryName") String categoryName){
 		return categoryService.createCategory(new Category().setCategoryName(categoryName));
+	}
+
+	@GetMapping("/categories/{categoryId}/products")
+	public List<Product> getAllProductsOfCategory(@PathVariable("categoryId") int categoryId) {
+		return categoryService.getAllProductsOfCategoryId(categoryId);
 	}
 
 	@PostMapping(value = "/categories/{categoryId}/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

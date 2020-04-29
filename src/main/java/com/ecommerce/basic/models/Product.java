@@ -1,5 +1,7 @@
 package com.ecommerce.basic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 /**
@@ -17,6 +19,9 @@ public class Product {
 	private Integer price;
 	private String imageURI;
 
+	/* Ignoring category field in json response of getting all products of a category;
+	   creates repetition of category object in all product objects.*/
+	@JsonIgnore
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "categoryId")
 	private Category category;
