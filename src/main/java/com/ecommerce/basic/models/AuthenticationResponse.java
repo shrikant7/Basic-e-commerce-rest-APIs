@@ -1,16 +1,11 @@
 package com.ecommerce.basic.models;
 
+import lombok.Data;
+
 /**
  * @author Shrikant Sharma
  */
+@Data
 public class AuthenticationResponse {
 	private final String jwt;
-
-	public AuthenticationResponse(String jwt) {
-		this.jwt = jwt;
-	}
-
-	public String getJwt() {
-		return jwt;
-	}
 }

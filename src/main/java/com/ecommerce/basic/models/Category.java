@@ -1,6 +1,9 @@
 package com.ecommerce.basic.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.util.List;
@@ -9,44 +12,15 @@ import java.util.List;
  * @author Shrikant Sharma
  */
 
-@Entity
-@Table
+@Entity @Table
+@Data @Accessors(chain = true)
 public class Category {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int categoryId;
 	private String categoryName;
 
+	@ToString.Exclude
 	@OneToMany(mappedBy = "category")
 	private List<Product> products;
-
-	public Category() {
-	}
-
-	public int getCategoryId() {
-		return categoryId;
-	}
-
-	public Category setCategoryId(int categoryId) {
-		this.categoryId = categoryId;
-		return this;
-	}
-
-	public String getCategoryName() {
-		return categoryName;
-	}
-
-	public Category setCategoryName(String categoryName) {
-		this.categoryName = categoryName;
-		return this;
-	}
-
-	public List<Product> getProducts() {
-		return products;
-	}
-
-	public Category setProducts(List<Product> products) {
-		this.products = products;
-		return this;
-	}
 }
