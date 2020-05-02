@@ -18,8 +18,9 @@ public class Product {
 	private int productId;
 	private String name;
 	private String description;
-	private Integer price;
-	private String imageURI;
+	private Integer mrpPrice;
+	private Integer yourPrice;
+	private String imageUri;
 
 	/* Ignoring category field in json response of getting all products of a category;
 	   creates repetition of category object in all product objects.*/

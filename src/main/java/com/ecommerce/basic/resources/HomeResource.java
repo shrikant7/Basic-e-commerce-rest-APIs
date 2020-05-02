@@ -1,13 +1,7 @@
 package com.ecommerce.basic.resources;
 
-import com.ecommerce.basic.models.AuthenticationRequest;
-import com.ecommerce.basic.models.AuthenticationResponse;
-import com.ecommerce.basic.models.Category;
-import com.ecommerce.basic.models.Product;
-import com.ecommerce.basic.services.CategoryService;
-import com.ecommerce.basic.services.ImageStorageService;
-import com.ecommerce.basic.services.MyUserDetailsService;
-import com.ecommerce.basic.services.ProductService;
+import com.ecommerce.basic.models.*;
+import com.ecommerce.basic.services.*;
 import com.ecommerce.basic.utils.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +44,8 @@ public class HomeResource {
 	private ProductService productService;
 	@Autowired
 	private CategoryService categoryService;
+	@Autowired
+	private HighlightService highlightService;
 
 	ObjectMapper objectMapper = new ObjectMapper();
 
@@ -79,39 +75,53 @@ public class HomeResource {
 		return categoryService.getAllCategories();
 	}
 
-	@GetMapping("/categories/{categoryId}")
-	public Category getCategoryByCategoryId(@PathVariable int categoryId){
-		return categoryService.getCategoryByID(categoryId);
+	@GetMapping("categories/{categoryName}")
+	public Category geCategoryByName(@PathVariable String categoryName){
+		return categoryService.getCategoryByName(categoryName);
 	}
-
 	@PostMapping("/categories")
 	public Category createCategory(@RequestParam("categoryName") String categoryName){
 		return categoryService.createCategory(new Category().setCategoryName(categoryName));
 	}
 
-	@GetMapping("/categories/{categoryId}/products")
-	public List<Product> getAllProductsOfCategory(@PathVariable("categoryId") int categoryId) {
-		return categoryService.getAllProductsOfCategoryId(categoryId);
+	@GetMapping("/categories/{categoryName}/products")
+	public List<Product> getAllProductsOfCategory(@PathVariable("categoryName") String categoryName) {
+		return categoryService.getAllProductsOfCategoryName(categoryName);
 	}
 
-	@PostMapping(value = "/categories/{categoryId}/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/categories/{categoryName}/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Product createProduct(
-			@PathVariable("categoryId") int categoryId,
+			@PathVariable("categoryName") String categoryName,
 			@RequestParam("productJson") String productJson,
 			@RequestParam("file") MultipartFile productImage) throws JsonProcessingException {
 
-		String imageName = imageStorageService.storeImage(categoryId, productImage);
+		String imageName = imageStorageService.storeImage(categoryName, productImage);
 		String imageDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath()
 										.path("api/downloadImage/")
 										.path(imageName).toUriString();
 
-		Category category = categoryService.getCategoryByID(categoryId);
+		Category category = categoryService.getCategoryByName(categoryName);
 
 		Product product = objectMapper.readValue(productJson,Product.class)
 				.setCategory(category)
-				.setImageURI(imageDownloadURI);
+				.setImageUri(imageDownloadURI);
 
 		return productService.createProduct(product);
+	}
+
+	@GetMapping("/highlights")
+	public List<Highlight> getAllHighlights() {
+		return highlightService.getAllHighlights();
+	}
+
+	@PostMapping("/highlights")
+	public Highlight createHighlight(@RequestParam int productId) {
+		return highlightService.createHighlight(productId);
+	}
+
+	@DeleteMapping("/highlights/{highlightId}")
+	public Highlight deleteHighlight(@PathVariable("highlightId") int highlightId){
+		return highlightService.deleteHighlight(highlightId);
 	}
 
 	@GetMapping("/downloadImage/{imageName}")

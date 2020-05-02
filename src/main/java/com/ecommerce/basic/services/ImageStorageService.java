@@ -30,7 +30,7 @@ public class ImageStorageService {
 	}
 
 
-	public String storeImage(int categoryId, MultipartFile productImage) {
+	public String storeImage(String categoryName, MultipartFile productImage) {
 		String originalImageName = productImage.getOriginalFilename();
 		String[] nameSplit = originalImageName.split("[.]");
 		if(nameSplit.length !=2 || (!originalImageName.endsWith(".jpg")
@@ -39,10 +39,10 @@ public class ImageStorageService {
 		}
 
 		try {
-			Path targetDirectory = imageStoragePath.resolve(String.valueOf(categoryId));
+			Path targetDirectory = imageStoragePath.resolve(categoryName);
 			Files.createDirectories(targetDirectory);
 
-			String newImageName = categoryId+"_"+System.currentTimeMillis()+"."+nameSplit[1];
+			String newImageName = categoryName+"_"+System.currentTimeMillis()+"."+nameSplit[1];
 			Path targetLocation = targetDirectory.resolve(newImageName);
 			Files.copy(productImage.getInputStream(),targetLocation, StandardCopyOption.REPLACE_EXISTING);
 			return newImageName;
@@ -53,8 +53,8 @@ public class ImageStorageService {
 
 	public Resource loadImageAsResource(String imageName) {
 		try {
-			int category = Integer.parseInt(imageName.split("_")[0]);
-			Path imagePath = imageStoragePath.resolve(category+"/"+imageName).normalize();
+			String categoryName = imageName.split("_")[0];
+			Path imagePath = imageStoragePath.resolve(categoryName+"/"+imageName).normalize();
 			Resource resource = null;
 			resource = new UrlResource(imagePath.toUri());
 			if(resource.exists()){

@@ -30,8 +30,13 @@ public class CategoryService {
 		return optionalCategory.get();
 	}
 
-	public List<Product> getAllProductsOfCategoryId(int categoryId) {
-		return getCategoryByID(categoryId).getProducts();
+	public Category getCategoryByName(String categoryName) {
+		Optional<Category> optionalCategory = categoryRepository.findByCategoryName(categoryName);
+		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "no category found for categoryName: "+categoryName));
+		return optionalCategory.get();
+	}
+	public List<Product> getAllProductsOfCategoryName(String categoryName) {
+		return getCategoryByName(categoryName).getProducts();
 	}
 
 	public List<Category> getAllCategories() {
