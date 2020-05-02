@@ -5,9 +5,6 @@ import com.ecommerce.basic.services.*;
 import com.ecommerce.basic.utils.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -46,12 +43,20 @@ public class HomeResource {
 	private CategoryService categoryService;
 	@Autowired
 	private HighlightService highlightService;
+	@Autowired
+	private OrderService orderService;
 
 	ObjectMapper objectMapper = new ObjectMapper();
 
 	@GetMapping("/user")
 	public String user(){
 		return "Hello user";
+	}
+
+	@PostMapping("/users/{userName}/checkout")
+	public OrderItem createOrder(@PathVariable("userName") String userName,
+	                             @RequestBody List<OrderRequest> orderRequest) {
+		return orderService.createOrder(userName, orderRequest);
 	}
 
 	@PostMapping("/authenticate")
@@ -103,8 +108,8 @@ public class HomeResource {
 		Category category = categoryService.getCategoryByName(categoryName);
 
 		Product product = objectMapper.readValue(productJson,Product.class)
-				.setCategory(category)
-				.setImageUri(imageDownloadURI);
+										.setCategory(category)
+										.setImageUri(imageDownloadURI);
 
 		return productService.createProduct(product);
 	}
