@@ -24,6 +24,6 @@ public class Category {
 
 	@JsonIgnore
 	@ToString.Exclude
-	@OneToMany(mappedBy = "category")
+	@OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
 	private List<Product> products;
 }

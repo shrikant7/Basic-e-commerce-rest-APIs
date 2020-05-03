@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -21,5 +22,9 @@ public class UserService {
 		Optional<User> optionalUser = userRepository.findByUsername(username);
 		optionalUser.orElseThrow(()-> new UsernameNotFoundException("Not found: "+username));
 		return optionalUser.get();
+	}
+
+	public List<User> getAllUsers() {
+		return userRepository.findAll();
 	}
 }

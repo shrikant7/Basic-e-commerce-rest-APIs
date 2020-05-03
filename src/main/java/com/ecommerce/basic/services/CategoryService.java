@@ -42,4 +42,16 @@ public class CategoryService {
 	public List<Category> getAllCategories() {
 		return categoryRepository.findAll();
 	}
+
+	public Category updateCategory(String categoryName, Category newCategory) {
+		Category category = getCategoryByName(categoryName);
+		category.setCategoryName(newCategory.getCategoryName());
+		return categoryRepository.save(category);
+	}
+
+	public Category deleteCategory(String categoryName) {
+		Category category = getCategoryByName(categoryName);
+		categoryRepository.delete(category);
+		return category;
+	}
 }

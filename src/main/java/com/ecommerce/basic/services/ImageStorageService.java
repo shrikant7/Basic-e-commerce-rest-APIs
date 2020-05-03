@@ -1,16 +1,17 @@
 package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.exceptions.FileStorageException;
+import lombok.SneakyThrows;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 
 /**
  * @author Shrikant Sharma
@@ -64,6 +65,37 @@ public class ImageStorageService {
 			}
 		} catch (MalformedURLException e) {
 			throw new FileStorageException("error in retrieving image",e);
+		}
+	}
+
+	@SneakyThrows
+	public String moveImage(String imageName, String newCategoryName) {
+		String[] split = imageName.split("_");
+		String categoryName = split[0];
+		String extension = split[1].split("[.]")[1];
+		String newImageName = newCategoryName+"_"+System.currentTimeMillis()+"."+extension;
+
+		Path imagePath = imageStoragePath.resolve(categoryName+"/"+imageName).normalize();
+		Path newImagePath = imageStoragePath.resolve(newCategoryName+"/"+newImageName).normalize();
+
+		Files.move(imagePath, newImagePath, StandardCopyOption.REPLACE_EXISTING);
+		return newImageName;
+	}
+
+	@SneakyThrows
+	public void deleteImage(String imageName) {
+		String[] split = imageName.split("_");
+		String categoryName = split[0];
+		Path imagePath = imageStoragePath.resolve(categoryName+"/"+imageName).normalize();
+		Files.deleteIfExists(imagePath);
+	}
+
+	public void deleteAllImages(String categoryName) {
+		File directory = imageStoragePath.resolve(categoryName).normalize().toFile();
+		try {
+			FileUtils.deleteDirectory(directory);
+		} catch (IOException e) {
+			throw new FileStorageException("error in deleting category: "+categoryName+" images",e);
 		}
 	}
 }

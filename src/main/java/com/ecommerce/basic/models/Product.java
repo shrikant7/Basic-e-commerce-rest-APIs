@@ -17,6 +17,7 @@ public class Product {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int productId;
 	private String name;
+	@Column(length = 1000)
 	private String description;
 	private Integer mrpPrice;
 	private Integer yourPrice;
@@ -24,8 +25,7 @@ public class Product {
 
 	/* Ignoring category field in json response of getting all products of a category;
 	   creates repetition of category object in all product objects.*/
-	@JsonIgnore
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne
 	@JoinColumn(name = "categoryId")
 	private Category category;
 }

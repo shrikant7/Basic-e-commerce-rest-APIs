@@ -13,6 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>basic</name>
 	<description>basic ecommerce rest apis</description>
+	<packaging>jar</packaging>
 
 	<properties>
 		<java.version>14</java.version>
@@ -79,10 +80,14 @@
 	</dependencies>
 
 	<build>
+		<finalName>EcommerceRestApis-application</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<executable>true</executable>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

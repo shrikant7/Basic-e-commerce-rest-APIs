@@ -34,6 +34,8 @@ public class HomeResource {
 	@Autowired
 	private MyUserDetailsService userDetailsService;
 	@Autowired
+	private UserService userService;
+	@Autowired
 	private JwtUtil jwtTokenUtil;
 	@Autowired
 	private ImageStorageService imageStorageService;
@@ -53,10 +55,27 @@ public class HomeResource {
 		return "Hello user";
 	}
 
+	@GetMapping("/users")
+	public List<User> getAllUsers() {
+		return userService.getAllUsers();
+	}
+
+	@GetMapping("users/{userName}")
+	public User getUserByUsername(@PathVariable String userName) {
+		return userService.findByUsername(userName);
+	}
+
 	@PostMapping("/users/{userName}/checkout")
 	public OrderItem createOrder(@PathVariable("userName") String userName,
 	                             @RequestBody List<OrderRequest> orderRequest) {
 		return orderService.createOrder(userName, orderRequest);
+	}
+
+	@GetMapping("/users/{userName}/order-history")
+	public List<OrderItem> getOrderHistory(@PathVariable("userName") String userName,
+	                                       @RequestParam(value = "offset", defaultValue = "0") int offset,
+	                                       @RequestParam(value = "limit", defaultValue = "0") int limit) {
+		return orderService.getOrderHistory(userName, offset, limit);
 	}
 
 	@PostMapping("/authenticate")
@@ -81,12 +100,27 @@ public class HomeResource {
 	}
 
 	@GetMapping("categories/{categoryName}")
-	public Category geCategoryByName(@PathVariable String categoryName){
+	public Category getCategoryByName(@PathVariable String categoryName) {
 		return categoryService.getCategoryByName(categoryName);
 	}
+
 	@PostMapping("/categories")
-	public Category createCategory(@RequestParam("categoryName") String categoryName){
+	public Category createCategory(@RequestParam("categoryName") String categoryName) {
 		return categoryService.createCategory(new Category().setCategoryName(categoryName));
+	}
+
+/*
+	@PutMapping("/categories/{categoryName}")
+	public Category updateCategory(@PathVariable String categoryName, @RequestBody Category newCategory) {
+		return categoryService.updateCategory(categoryName, newCategory);
+	}
+*/
+
+	@DeleteMapping("/categories/{categoryName}")
+	public Category deleteCategory(@PathVariable String categoryName) {
+		Category category = categoryService.deleteCategory(categoryName);
+		imageStorageService.deleteAllImages(category.getCategoryName());
+		return category;
 	}
 
 	@GetMapping("/categories/{categoryName}/products")
@@ -100,18 +134,95 @@ public class HomeResource {
 			@RequestParam("productJson") String productJson,
 			@RequestParam("file") MultipartFile productImage) throws JsonProcessingException {
 
-		String imageName = imageStorageService.storeImage(categoryName, productImage);
-		String imageDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath()
-										.path("api/downloadImage/")
-										.path(imageName).toUriString();
+		String imageDownloadURI = storeAndGetImageUri(categoryName, productImage);
 
 		Category category = categoryService.getCategoryByName(categoryName);
-
 		Product product = objectMapper.readValue(productJson,Product.class)
 										.setCategory(category)
 										.setImageUri(imageDownloadURI);
 
 		return productService.createProduct(product);
+	}
+
+	private String storeAndGetImageUri(@PathVariable("categoryName") String categoryName, @RequestParam("file") MultipartFile productImage) {
+		String imageName = imageStorageService.storeImage(categoryName, productImage);
+		return ServletUriComponentsBuilder.fromCurrentContextPath()
+										.path("api/downloadImage/")
+										.path(imageName).toUriString();
+	}
+
+	@GetMapping("/categories/{categoryName}/products/{productId}")
+	public Product getSingleProduct(@PathVariable("categoryName") String categoryName,
+	                                @PathVariable("productId") int productId) {
+		return productService.getProductByCategory(categoryName, productId);
+	}
+
+	@PutMapping(value = "/categories/{categoryName}/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public Product updateSingleProduct(@PathVariable("categoryName") String categoryName,
+	                                   @PathVariable("productId") int productId,
+	                                   @RequestParam(value = "productJson", required = false) String productJson,
+	                                   @RequestParam(value = "file", required = false) MultipartFile productImage) throws JsonProcessingException {
+		Product product = productService.getProductByCategory(categoryName, productId);
+
+		Product newProduct;
+		if(productJson != null) {
+			newProduct = objectMapper.readValue(productJson, Product.class);
+			newProduct.setProductId(product.getProductId());
+			newProduct.setImageUri(product.getImageUri());
+
+			if (newProduct.getName() == null || newProduct.getName().equals("")) {
+				newProduct.setName(product.getName());
+			}
+
+			if(newProduct.getDescription() == null || newProduct.getDescription().equals("")) {
+				newProduct.setDescription(product.getDescription());
+			}
+
+			if (newProduct.getMrpPrice() == null || newProduct.getMrpPrice() == 0) {
+				newProduct.setMrpPrice(product.getMrpPrice());
+			}
+
+			if (newProduct.getYourPrice() == null || newProduct.getYourPrice() == 0) {
+				newProduct.setYourPrice(product.getYourPrice());
+			}
+
+			if (newProduct.getCategory() != null && newProduct.getCategory().getCategoryName() != null) {
+				Category category = categoryService.getCategoryByName(newProduct.getCategory().getCategoryName());
+				newProduct.setCategory(category);
+				if (!category.getCategoryName().equals(categoryName)) {
+					String[] split = product.getImageUri().split("/");
+					String imageName = split[split.length - 1];
+					String newImageName = imageStorageService.moveImage(imageName, category.getCategoryName());
+					String imageDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath()
+																		.path("api/downloadImage/")
+																		.path(newImageName).toUriString();
+					newProduct.setImageUri(imageDownloadURI);
+				}
+			} else {
+				newProduct.setCategory(product.getCategory());
+			}
+		}else {
+			newProduct = product;
+		}
+
+		if(productImage != null && !productImage.isEmpty()) {
+			String[] split = product.getImageUri().split("/");
+			String imageName = split[split.length-1];
+			imageStorageService.deleteImage(imageName);
+			String imageDownloadURI = storeAndGetImageUri(newProduct.getCategory().getCategoryName(), productImage);
+			newProduct.setImageUri(imageDownloadURI);
+		}
+		return productService.updateSingleProduct(product, newProduct);
+	}
+
+	@DeleteMapping("/categories/{categoryName}/products/{productId}")
+	public Product deleteSingleProduct(@PathVariable("categoryName") String categoryName,
+	                                   @PathVariable("productId") int productId) {
+		Product product = productService.deleteProductByCategory(categoryName, productId);
+		String[] split = product.getImageUri().split("/");
+		String imageName = split[split.length-1];
+		imageStorageService.deleteImage(imageName);
+		return product;
 	}
 
 	@GetMapping("/highlights")
@@ -125,12 +236,12 @@ public class HomeResource {
 	}
 
 	@DeleteMapping("/highlights/{highlightId}")
-	public Highlight deleteHighlight(@PathVariable("highlightId") int highlightId){
+	public Highlight deleteHighlight(@PathVariable("highlightId") int highlightId) {
 		return highlightService.deleteHighlight(highlightId);
 	}
 
 	@GetMapping("/downloadImage/{imageName}")
-	public ResponseEntity<Resource> downloadFile(@PathVariable String imageName, HttpServletRequest request){
+	public ResponseEntity<Resource> downloadFile(@PathVariable String imageName, HttpServletRequest request) {
 		Resource resource = imageStorageService.loadImageAsResource(imageName);
 		String contentType = null;
 		try{
@@ -147,5 +258,4 @@ public class HomeResource {
 				.header(HttpHeaders.CONTENT_DISPOSITION,resource.getFilename())
 				.body(resource);
 	}
-
 }

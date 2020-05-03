@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -45,5 +47,24 @@ public class OrderService {
 				.setPlacedOn(LocalDateTime.now());
 
 		return orderRepository.saveAndFlush(orderItem);
+	}
+
+	public List<OrderItem> getOrderHistory(String userName, int offset, int limit) {
+		User user = userService.findByUsername(userName);
+		List<OrderItem> orderItems = user.getOrderItems();
+		orderItems.sort(Comparator.comparing(OrderItem::getPlacedOn).reversed());
+		int size = orderItems.size();
+
+		if(offset >= 0 && offset < size && limit >= 0) {
+			//if offset and limit is zero then default condition and return all orderItems
+			if(offset == 0 && limit == 0){
+				return orderItems;
+			}
+			//return sublist from offset to limit/size length;
+			return orderItems.subList(offset, Math.min(offset+limit,size));
+		}
+
+		//otherwise return empty list;
+		return Collections.emptyList();
 	}
 }
