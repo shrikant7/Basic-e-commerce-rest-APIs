@@ -1,6 +1,7 @@
 package com.ecommerce.basic.models;
 
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -27,4 +28,12 @@ public class OrderItem {
 
 	@OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL)
 	private List<OrderDetail> orderDetails;
+
+	public String shortenToString() {
+		return "OrderItem{" +
+				"orderId=" + orderId +
+				", placedOn=" + placedOn +
+				", totalValue=" + totalValue +
+				'}';
+	}
 }

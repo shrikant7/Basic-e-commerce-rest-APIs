@@ -28,4 +28,13 @@ public class Product {
 	@ManyToOne
 	@JoinColumn(name = "categoryId")
 	private Category category;
+
+	public String shortenToString() {
+		return "Product{" +
+				"productId=" + productId +
+				", name='" + name +
+				", mrpPrice=" + mrpPrice +
+				", yourPrice=" + yourPrice +
+				'}';
+	}
 }

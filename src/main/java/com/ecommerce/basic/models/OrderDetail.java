@@ -2,6 +2,7 @@ package com.ecommerce.basic.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -17,6 +18,7 @@ public class OrderDetail {
 	@GeneratedValue
 	private long orderDetailId;
 
+	@ToString.Exclude
 	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "orderId")
@@ -29,4 +31,13 @@ public class OrderDetail {
 	private int boughtPrice;
 	private int quantity;
 	private long productTotal;
+
+	public String shortenToString() {
+		return "OrderDetail{" +
+				"product=" + product.shortenToString() +
+				", boughtPrice=" + boughtPrice +
+				", quantity=" + quantity +
+				", productTotal=" + productTotal +
+				'}';
+	}
 }

@@ -47,6 +47,8 @@ public class HomeResource {
 	private HighlightService highlightService;
 	@Autowired
 	private OrderService orderService;
+	@Autowired
+	private MailSenderService mailSenderService;
 
 	ObjectMapper objectMapper = new ObjectMapper();
 
@@ -68,7 +70,9 @@ public class HomeResource {
 	@PostMapping("/users/{userName}/checkout")
 	public OrderItem createOrder(@PathVariable("userName") String userName,
 	                             @RequestBody List<OrderRequest> orderRequest) {
-		return orderService.createOrder(userName, orderRequest);
+		OrderItem orderItem = orderService.createOrder(userName, orderRequest);
+		mailSenderService.sendMailToAdmin(orderItem);
+		return orderItem;
 	}
 
 	@GetMapping("/users/{userName}/order-history")
