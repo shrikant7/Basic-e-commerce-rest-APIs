@@ -1,5 +1,6 @@
 package com.ecommerce.basic.resources;
 
+import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.services.*;
 import com.ecommerce.basic.utils.JwtUtil;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Shrikant Sharma
@@ -80,6 +82,38 @@ public class HomeResource {
 	                                       @RequestParam(value = "offset", defaultValue = "0") int offset,
 	                                       @RequestParam(value = "limit", defaultValue = "0") int limit) {
 		return orderService.getOrderHistory(userName, offset, limit);
+	}
+
+	@GetMapping("/users/{userName}/orderItems")
+	public List<OrderItemDto> getOnlyOrderItems(@PathVariable("userName") String userName,
+	                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
+	                                            @RequestParam(value = "limit", defaultValue = "0") int limit) {
+		List<OrderItem> orderHistory = orderService.getOrderHistory(userName, offset, limit);
+		return orderHistory.stream().map(this::mapToOrderItemDto).collect(Collectors.toList());
+	}
+
+	private OrderItemDto mapToOrderItemDto(OrderItem orderItem) {
+		return new OrderItemDto(orderItem.getOrderId(),
+				orderItem.getPlacedOn(),
+				orderItem.getTotalValue());
+	}
+
+	@GetMapping("/users/{userName}/orderItems/{itemId}")
+	public List<OrderDetailDto> getOrderDetail(@PathVariable("userName") String userName,
+	                                     @PathVariable("itemId") int orderId) {
+		OrderItem orderItem = orderService.getOrderItem(userName, orderId);
+		if(!userName.equals(orderItem.getUser().getUsername())) {
+			throw new NoSuchResourceException(HomeResource.class, "orderItem does not belongs to User: "+userName);
+		}
+		return orderItem.getOrderDetails().stream().map(this::mapToOrderDetailDto).collect(Collectors.toList());
+	}
+
+	private OrderDetailDto mapToOrderDetailDto(OrderDetail orderDetail) {
+		Product product = orderDetail.getProduct();
+		return new OrderDetailDto(new ProductDto(product.getProductId(), product.getName(), product.getYourPrice()),
+				orderDetail.getBoughtPrice(),
+				orderDetail.getQuantity(),
+				orderDetail.getProductTotal());
 	}
 
 	@PostMapping("/authenticate")

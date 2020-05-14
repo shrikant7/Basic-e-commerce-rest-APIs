@@ -2,7 +2,6 @@ package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.models.OrderDetail;
 import com.ecommerce.basic.models.OrderItem;
-import com.ecommerce.basic.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;

@@ -1,15 +1,13 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Shrikant Sharma
@@ -49,6 +47,7 @@ public class OrderService {
 		return orderRepository.saveAndFlush(orderItem);
 	}
 
+	//provides orderItems with details
 	public List<OrderItem> getOrderHistory(String userName, int offset, int limit) {
 		User user = userService.findByUsername(userName);
 		List<OrderItem> orderItems = user.getOrderItems();
@@ -66,5 +65,11 @@ public class OrderService {
 
 		//otherwise return empty list;
 		return Collections.emptyList();
+	}
+
+	public OrderItem getOrderItem(String userName, int orderId) {
+		Optional<OrderItem> optionalOrderItem = orderRepository.findById(orderId);
+		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(OrderService.class,"No product found for orderId: "+orderId));
+		return optionalOrderItem.get();
 	}
 }
