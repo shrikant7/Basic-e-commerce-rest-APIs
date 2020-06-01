@@ -11,4 +11,5 @@ public class ProductDto {
 	int productId;
 	String name;
 	Integer mrpPrice;
+	String imageUri;
 }

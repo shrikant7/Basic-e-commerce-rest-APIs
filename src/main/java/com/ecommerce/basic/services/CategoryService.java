@@ -21,6 +21,9 @@ public class CategoryService {
 
 
 	public Category createCategory(Category category) {
+		if(category.getCategoryName().length() == 0) {
+			throw new RuntimeException("CategoryName can't be empty.");
+		}
 		return categoryRepository.save(category);
 	}
 

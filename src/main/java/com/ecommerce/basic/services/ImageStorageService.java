@@ -1,17 +1,20 @@
 package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.exceptions.FileStorageException;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
 import lombok.SneakyThrows;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gcp.storage.GoogleStorageResource;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.WritableResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.*;
+import java.io.OutputStream;
 
 /**
  * @author Shrikant Sharma
@@ -19,83 +22,76 @@ import java.nio.file.*;
 
 @Service
 public class ImageStorageService {
-	private final Path imageStoragePath;
+	@Value("${gcs-resource-bucket}")
+	private String bucket;
+	@Value("${gcs-resource-path}")
+	private String cloudStoragePath;
+	@Autowired
+	Storage storage;
+	@Autowired
+	private ApplicationContext context;
 
-	public ImageStorageService() {
-		this.imageStoragePath = Paths.get("./uploads").toAbsolutePath().normalize();
-		try {
-			Files.createDirectories(imageStoragePath);
-		} catch (Exception e) {
-			throw new FileStorageException("Could not able to create directory to upload images",e);
-		}
-	}
-
-
-	public String storeImage(String categoryName, MultipartFile productImage) {
+	public String storeImage(int categoryId, MultipartFile productImage) {
 		String originalImageName = productImage.getOriginalFilename();
 		String[] nameSplit = originalImageName.split("[.]");
-		if(nameSplit.length !=2 || (!originalImageName.endsWith(".jpg")
+		if (nameSplit.length != 2 || (!originalImageName.endsWith(".jpg")
 				&& !originalImageName.endsWith(".jpeg") && !originalImageName.endsWith(".png"))) {
-				throw new FileStorageException("Sorry!! file is of INVALID name or extension: "+originalImageName);
+			throw new FileStorageException("Sorry!! file is of INVALID name or extension: " + originalImageName);
 		}
 
 		try {
-			Path targetDirectory = imageStoragePath.resolve(categoryName);
-			Files.createDirectories(targetDirectory);
-
-			String newImageName = categoryName+"_"+System.currentTimeMillis()+"."+nameSplit[1];
-			Path targetLocation = targetDirectory.resolve(newImageName);
-			Files.copy(productImage.getInputStream(),targetLocation, StandardCopyOption.REPLACE_EXISTING);
+			String newImageName = categoryId + "_" + System.currentTimeMillis() + "." + nameSplit[1];
+			String targetPath = cloudStoragePath + "/" + categoryId + "/" + newImageName;
+			Resource gcsImage = context.getResource(targetPath);
+			byte[] pictureBytes = StreamUtils.copyToByteArray(productImage.getInputStream());
+			try (OutputStream os = ((WritableResource) gcsImage).getOutputStream()) {
+				os.write(pictureBytes);
+			}
 			return newImageName;
 		} catch (Exception e) {
-			throw new FileStorageException("Could not store image. Please try again",e);
+			throw new FileStorageException("Could not store image. Please try again", e);
 		}
 	}
 
 	public Resource loadImageAsResource(String imageName) {
-		try {
-			String categoryName = imageName.split("_")[0];
-			Path imagePath = imageStoragePath.resolve(categoryName+"/"+imageName).normalize();
-			Resource resource = null;
-			resource = new UrlResource(imagePath.toUri());
-			if(resource.exists()){
-				return resource;
-			}else {
-				throw new FileStorageException("image not found");
-			}
-		} catch (MalformedURLException e) {
-			throw new FileStorageException("error in retrieving image",e);
+		String categoryId = imageName.split("_")[0];
+		String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
+		Resource resource = context.getResource(imagePath);
+		if (resource.exists()) {
+			return resource;
+		} else {
+			throw new FileStorageException("image not found");
 		}
 	}
 
 	@SneakyThrows
-	public String moveImage(String imageName, String newCategoryName) {
+	public String moveImage(String imageName, int newCategoryId) {
 		String[] split = imageName.split("_");
-		String categoryName = split[0];
+		String categoryId = split[0];
 		String extension = split[1].split("[.]")[1];
-		String newImageName = newCategoryName+"_"+System.currentTimeMillis()+"."+extension;
+		String newImageName = newCategoryId + "_" + System.currentTimeMillis() + "." + extension;
 
-		Path imagePath = imageStoragePath.resolve(categoryName+"/"+imageName).normalize();
-		Path newImagePath = imageStoragePath.resolve(newCategoryName+"/"+newImageName).normalize();
-
-		Files.move(imagePath, newImagePath, StandardCopyOption.REPLACE_EXISTING);
+		String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
+		GoogleStorageResource resource = (GoogleStorageResource) context.getResource(imagePath);
+		resource.getBlob().copyTo(String.valueOf(newCategoryId), newImageName);
 		return newImageName;
 	}
 
 	@SneakyThrows
 	public void deleteImage(String imageName) {
 		String[] split = imageName.split("_");
-		String categoryName = split[0];
-		Path imagePath = imageStoragePath.resolve(categoryName+"/"+imageName).normalize();
-		Files.deleteIfExists(imagePath);
+		String categoryId = split[0];
+		String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
+		System.out.println("imagePath: "+imagePath);
+		GoogleStorageResource resource = (GoogleStorageResource) context.getResource(imagePath);
+		resource.getBlob().delete();
 	}
 
-	public void deleteAllImages(String categoryName) {
-		File directory = imageStoragePath.resolve(categoryName).normalize().toFile();
-		try {
-			FileUtils.deleteDirectory(directory);
-		} catch (IOException e) {
-			throw new FileStorageException("error in deleting category: "+categoryName+" images",e);
+	public void deleteAllImages(int categoryId) {
+		Iterable<Blob> blobs = storage.list(bucket, Storage.BlobListOption.currentDirectory(),
+								Storage.BlobListOption.prefix(categoryId+"/")).iterateAll();
+		for (Blob blob : blobs) {
+			blob.delete();
 		}
 	}
 }

@@ -4,9 +4,9 @@ import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.services.*;
 import com.ecommerce.basic.utils.JwtUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -51,6 +51,8 @@ public class HomeResource {
 	private OrderService orderService;
 	@Autowired
 	private MailSenderService mailSenderService;
+	@Value("${host-address}")
+	private String hostAddress;
 
 	ObjectMapper objectMapper = new ObjectMapper();
 
@@ -73,7 +75,7 @@ public class HomeResource {
 	public OrderItem createOrder(@PathVariable("userName") String userName,
 	                             @RequestBody List<OrderRequest> orderRequest) {
 		OrderItem orderItem = orderService.createOrder(userName, orderRequest);
-		mailSenderService.sendMailToAdmin(orderItem);
+		mailSenderService.sendSimpleMailToAdminCloud(orderItem);
 		return orderItem;
 	}
 
@@ -110,7 +112,7 @@ public class HomeResource {
 
 	private OrderDetailDto mapToOrderDetailDto(OrderDetail orderDetail) {
 		Product product = orderDetail.getProduct();
-		return new OrderDetailDto(new ProductDto(product.getProductId(), product.getName(), product.getYourPrice()),
+		return new OrderDetailDto(new ProductDto(product.getProductId(), product.getName(), product.getYourPrice(), product.getImageUri()),
 				orderDetail.getBoughtPrice(),
 				orderDetail.getQuantity(),
 				orderDetail.getProductTotal());
@@ -147,17 +149,15 @@ public class HomeResource {
 		return categoryService.createCategory(new Category().setCategoryName(categoryName));
 	}
 
-/*
 	@PutMapping("/categories/{categoryName}")
 	public Category updateCategory(@PathVariable String categoryName, @RequestBody Category newCategory) {
 		return categoryService.updateCategory(categoryName, newCategory);
 	}
-*/
 
 	@DeleteMapping("/categories/{categoryName}")
 	public Category deleteCategory(@PathVariable String categoryName) {
 		Category category = categoryService.deleteCategory(categoryName);
-		imageStorageService.deleteAllImages(category.getCategoryName());
+		imageStorageService.deleteAllImages(category.getCategoryId());
 		return category;
 	}
 
@@ -170,11 +170,11 @@ public class HomeResource {
 	public Product createProduct(
 			@PathVariable("categoryName") String categoryName,
 			@RequestParam("productJson") String productJson,
-			@RequestParam("file") MultipartFile productImage) throws JsonProcessingException {
-
-		String imageDownloadURI = storeAndGetImageUri(categoryName, productImage);
+			@RequestParam("file") MultipartFile productImage) throws IOException {
 
 		Category category = categoryService.getCategoryByName(categoryName);
+		String imageDownloadURI = storeAndGetImageUri(category.getCategoryId(), productImage);
+
 		Product product = objectMapper.readValue(productJson,Product.class)
 										.setCategory(category)
 										.setImageUri(imageDownloadURI);
@@ -182,9 +182,10 @@ public class HomeResource {
 		return productService.createProduct(product);
 	}
 
-	private String storeAndGetImageUri(@PathVariable("categoryName") String categoryName, @RequestParam("file") MultipartFile productImage) {
-		String imageName = imageStorageService.storeImage(categoryName, productImage);
-		return ServletUriComponentsBuilder.fromCurrentContextPath()
+	private String storeAndGetImageUri(int categoryId, MultipartFile productImage) {
+		String imageName = imageStorageService.storeImage(categoryId, productImage);
+		System.out.println("hostAddress: "+hostAddress);
+		return ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
 										.path("api/downloadImage/")
 										.path(imageName).toUriString();
 	}
@@ -199,7 +200,7 @@ public class HomeResource {
 	public Product updateSingleProduct(@PathVariable("categoryName") String categoryName,
 	                                   @PathVariable("productId") int productId,
 	                                   @RequestParam(value = "productJson", required = false) String productJson,
-	                                   @RequestParam(value = "file", required = false) MultipartFile productImage) throws JsonProcessingException {
+	                                   @RequestParam(value = "file", required = false) MultipartFile productImage) throws IOException {
 		Product product = productService.getProductByCategory(categoryName, productId);
 
 		Product newProduct;
@@ -230,8 +231,8 @@ public class HomeResource {
 				if (!category.getCategoryName().equals(categoryName)) {
 					String[] split = product.getImageUri().split("/");
 					String imageName = split[split.length - 1];
-					String newImageName = imageStorageService.moveImage(imageName, category.getCategoryName());
-					String imageDownloadURI = ServletUriComponentsBuilder.fromCurrentContextPath()
+					String newImageName = imageStorageService.moveImage(imageName, category.getCategoryId());
+					String imageDownloadURI = ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
 																		.path("api/downloadImage/")
 																		.path(newImageName).toUriString();
 					newProduct.setImageUri(imageDownloadURI);
@@ -247,7 +248,7 @@ public class HomeResource {
 			String[] split = product.getImageUri().split("/");
 			String imageName = split[split.length-1];
 			imageStorageService.deleteImage(imageName);
-			String imageDownloadURI = storeAndGetImageUri(newProduct.getCategory().getCategoryName(), productImage);
+			String imageDownloadURI = storeAndGetImageUri(newProduct.getCategory().getCategoryId(), productImage);
 			newProduct.setImageUri(imageDownloadURI);
 		}
 		return productService.updateSingleProduct(product, newProduct);
@@ -282,11 +283,7 @@ public class HomeResource {
 	public ResponseEntity<Resource> downloadFile(@PathVariable String imageName, HttpServletRequest request) {
 		Resource resource = imageStorageService.loadImageAsResource(imageName);
 		String contentType = null;
-		try{
-			contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-		} catch (IOException e){
-			e.printStackTrace();
-		}
+		contentType = request.getServletContext().getMimeType(imageName);
 
 		//if we are not able to determine it contentType then mark it unknown binary object;
 		if(contentType == null){
