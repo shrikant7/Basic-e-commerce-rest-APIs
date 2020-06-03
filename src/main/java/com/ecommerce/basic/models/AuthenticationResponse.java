@@ -8,4 +8,5 @@ import lombok.Data;
 @Data
 public class AuthenticationResponse {
 	private final String jwt;
+	private final User user;
 }

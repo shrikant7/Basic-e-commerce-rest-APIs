@@ -82,7 +82,6 @@ public class ImageStorageService {
 		String[] split = imageName.split("_");
 		String categoryId = split[0];
 		String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
-		System.out.println("imagePath: "+imagePath);
 		GoogleStorageResource resource = (GoogleStorageResource) context.getResource(imagePath);
 		resource.getBlob().delete();
 	}

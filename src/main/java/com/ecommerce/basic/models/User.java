@@ -6,6 +6,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -14,9 +15,9 @@ import java.util.List;
 
 @Entity @Table(name = "User")
 @Data @Accessors(chain = true)
-public class User {
+public class User implements Serializable {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue
 	private int id;
 
 	@Column(unique = true)
@@ -28,6 +29,11 @@ public class User {
 
 	private boolean active;
 	private String roles;
+
+	@JsonIgnore
+	@ToString.Exclude
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+	private UserInfo userInfo;
 
 	@JsonIgnore
 	@ToString.Exclude

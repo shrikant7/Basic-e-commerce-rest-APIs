@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -69,6 +68,21 @@ public class HomeResource {
 	@GetMapping("users/{userName}")
 	public User getUserByUsername(@PathVariable String userName) {
 		return userService.findByUsername(userName);
+	}
+
+	@PostMapping("users/{userName}/generate-otp")
+	public String generateOtp(@PathVariable String userName) {
+		Otp otp = userService.generateOtp(userName);
+		mailSenderService.sendSimpleMailOtpToUserCloud(otp);
+		return otp.getUser().getUserInfo().getEmail();
+	}
+
+	@PostMapping("users/{userName}/verify-otp")
+	public ResponseEntity<?> verifyOtp(@PathVariable String userName,
+	                                   @RequestBody OtpVerificationRequest otpVerificationRequest) {
+		User user = userService.verifyOtp(userName, otpVerificationRequest);
+		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
+		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
 	}
 
 	@PostMapping("/users/{userName}/checkout")
@@ -128,10 +142,10 @@ public class HomeResource {
 			throw new Exception("Incorrect username or password",e);
 		}
 
-		final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-		final String jwt = jwtTokenUtil.generateToken(userDetails);
+		final User user = userService.findByUsername(authenticationRequest.getUsername());
+		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
 
-		return ResponseEntity.ok(new AuthenticationResponse(jwt));
+		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
 	}
 
 	@GetMapping("/categories")
@@ -184,7 +198,6 @@ public class HomeResource {
 
 	private String storeAndGetImageUri(int categoryId, MultipartFile productImage) {
 		String imageName = imageStorageService.storeImage(categoryId, productImage);
-		System.out.println("hostAddress: "+hostAddress);
 		return ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
 										.path("api/downloadImage/")
 										.path(imageName).toUriString();

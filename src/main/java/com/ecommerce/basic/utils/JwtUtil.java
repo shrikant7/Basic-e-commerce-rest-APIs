@@ -39,19 +39,20 @@ public class JwtUtil {
 		return extractExpiration(token).before(new Date());
 	}
 
-	public String generateToken(UserDetails userDetails){
+	public String generateToken(String userName){
 		Map<String,Object> claims = new HashMap<>();
-		return createToken(claims,userDetails.getUsername());
+		return createToken(claims, userName);
 	}
 
 	private String createToken(Map<String,Object> claims,String subject){
-		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 1000*60*60*10))
+		return Jwts.builder().setClaims(claims).setSubject(subject)
+				.setIssuedAt(new Date(System.currentTimeMillis()))
+				//.setExpiration(new Date(System.currentTimeMillis() + 1000*60*60*10))
 				.signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
 	}
 
-	public Boolean validateToken(String token, UserDetails userDetails){
+	public Boolean validateToken(String token, String realUsername){
 		final String userName = extractUserName(token);
-		return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+		return (userName.equals(realUsername)) /*&& !isTokenExpired(token)*/;
 	}
 }
