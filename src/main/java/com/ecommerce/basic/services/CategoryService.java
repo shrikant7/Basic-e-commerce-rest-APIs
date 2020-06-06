@@ -1,5 +1,6 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.Category;
 import com.ecommerce.basic.models.Product;
@@ -22,20 +23,20 @@ public class CategoryService {
 
 	public Category createCategory(Category category) {
 		if(category.getCategoryName().length() == 0) {
-			throw new RuntimeException("CategoryName can't be empty.");
+			throw new InvalidResourceName(CategoryService.class, "CategoryName can't be empty");
 		}
 		return categoryRepository.save(category);
 	}
 
 	public Category getCategoryByID(int categoryId) {
 		Optional<Category> optionalCategory = categoryRepository.findById(categoryId);
-		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "no category found for categoryID: "+categoryId));
+		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "No category found for categoryID: "+categoryId));
 		return optionalCategory.get();
 	}
 
 	public Category getCategoryByName(String categoryName) {
 		Optional<Category> optionalCategory = categoryRepository.findByCategoryName(categoryName);
-		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "no category found for categoryName: "+categoryName));
+		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "No category found for categoryName: "+categoryName));
 		return optionalCategory.get();
 	}
 	public List<Product> getAllProductsOfCategoryName(String categoryName) {

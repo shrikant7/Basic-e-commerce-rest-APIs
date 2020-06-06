@@ -1,12 +1,13 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.InvalidResourceName;
+import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.Otp;
 import com.ecommerce.basic.models.OtpVerificationRequest;
 import com.ecommerce.basic.models.User;
 import com.ecommerce.basic.repositories.OtpRepository;
 import com.ecommerce.basic.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class UserService {
 
 	public User findByUsername(String username) {
 		Optional<User> optionalUser = userRepository.findByUsername(username);
-		optionalUser.orElseThrow(()-> new UsernameNotFoundException("Not found: "+username));
+		optionalUser.orElseThrow(()-> new NoSuchResourceException(UserService.class, "No user found for UserName: "+username));
 		return optionalUser.get();
 	}
 
@@ -71,10 +72,10 @@ public class UserService {
 	public User verifyOtp(String userName, OtpVerificationRequest otpVerificationRequest) {
 		User user = findByUsername(userName);
 		Optional<Otp> optionalOtp = otpRepository.findByUser(user);
-		optionalOtp.orElseThrow(()-> new RuntimeException("Otp expired, please request again."));
+		optionalOtp.orElseThrow(()-> new InvalidResourceName(UserService.class, "Otp expired, please request again"));
 		Otp otp =optionalOtp.get();
 		if(!otp.getOtp().equals(otpVerificationRequest.getOtp()) || LocalDateTime.now().isAfter(otp.getGeneratedDatetime().plusMinutes(10))) {
-			throw new RuntimeException("Otp doesn't match/expired, retry please.");
+			throw new InvalidResourceName(UserService.class, "Otp doesn't match/expired, retry please");
 		}
 		validatePassword(otpVerificationRequest.getNewPassword());
 		user.setPassword(otpVerificationRequest.getNewPassword());
@@ -83,7 +84,7 @@ public class UserService {
 
 	private void validatePassword(String newPassword) {
 		if(newPassword == null || newPassword.length() < 4) {
-			throw new RuntimeException("Not a valid Password, password length should be greater than 4.");
+			throw new InvalidResourceName(UserService.class, "Not a valid Password, password length should be >= 4");
 		}
 	}
 }

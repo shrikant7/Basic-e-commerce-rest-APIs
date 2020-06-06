@@ -1,6 +1,8 @@
 package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.exceptions.FileStorageException;
+import com.ecommerce.basic.exceptions.InvalidFileExtension;
+import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import lombok.SneakyThrows;
@@ -36,7 +38,7 @@ public class ImageStorageService {
 		String[] nameSplit = originalImageName.split("[.]");
 		if (nameSplit.length != 2 || (!originalImageName.endsWith(".jpg")
 				&& !originalImageName.endsWith(".jpeg") && !originalImageName.endsWith(".png"))) {
-			throw new FileStorageException("Sorry!! file is of INVALID name or extension: " + originalImageName);
+			throw new InvalidFileExtension("INVALID name/extension of Image: " + originalImageName);
 		}
 
 		try {
@@ -60,7 +62,7 @@ public class ImageStorageService {
 		if (resource.exists()) {
 			return resource;
 		} else {
-			throw new FileStorageException("image not found");
+			throw new NoSuchResourceException(ImageStorageService.class,"Image not found for categoryId: "+categoryId);
 		}
 	}
 

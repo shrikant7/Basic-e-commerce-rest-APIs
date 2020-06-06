@@ -71,10 +71,10 @@ public class HomeResource {
 	}
 
 	@PostMapping("users/{userName}/generate-otp")
-	public String generateOtp(@PathVariable String userName) {
+	public MailDTO generateOtp(@PathVariable String userName) {
 		Otp otp = userService.generateOtp(userName);
 		mailSenderService.sendSimpleMailOtpToUserCloud(otp);
-		return otp.getUser().getUserInfo().getEmail();
+		return new MailDTO(otp.getUser().getUserInfo().getEmail());
 	}
 
 	@PostMapping("users/{userName}/verify-otp")
@@ -119,7 +119,7 @@ public class HomeResource {
 	                                     @PathVariable("itemId") int orderId) {
 		OrderItem orderItem = orderService.getOrderItem(userName, orderId);
 		if(!userName.equals(orderItem.getUser().getUsername())) {
-			throw new NoSuchResourceException(HomeResource.class, "orderItem does not belongs to User: "+userName);
+			throw new NoSuchResourceException(HomeResource.class, "OrderItem does not belongs to User: "+userName);
 		}
 		return orderItem.getOrderDetails().stream().map(this::mapToOrderDetailDto).collect(Collectors.toList());
 	}

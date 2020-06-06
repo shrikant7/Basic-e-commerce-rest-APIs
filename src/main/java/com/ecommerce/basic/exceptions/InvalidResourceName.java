@@ -3,11 +3,11 @@ package com.ecommerce.basic.exceptions;
 /**
  * @author Shrikant Sharma
  */
-public class NoSuchResourceException extends RuntimeException {
+public class InvalidResourceName extends RuntimeException {
 	private Class clazz;
 
-	public NoSuchResourceException(Class clazz, String message) {
-		super(message);
+	public InvalidResourceName(Class clazz, String msg) {
+		super(msg);
 		this.clazz = clazz;
 	}
 

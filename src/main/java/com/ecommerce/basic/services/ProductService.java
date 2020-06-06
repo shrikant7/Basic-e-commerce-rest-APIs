@@ -30,7 +30,7 @@ public class ProductService {
 	public Product getProductByCategory(String categoryName, int productId) {
 		Product product = getProductById(productId);
 		if(!product.getCategory().getCategoryName().equals(categoryName)) {
-			throw new NoSuchResourceException(ProductService.class, "product does not belongs to category: "+categoryName);
+			throw new NoSuchResourceException(ProductService.class, "Product does not belongs to category: "+categoryName);
 		}
 		return product;
 	}
