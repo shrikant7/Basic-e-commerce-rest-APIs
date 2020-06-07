@@ -7,6 +7,8 @@ import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -19,6 +21,8 @@ public class Category {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int categoryId;
+
+	@NotBlank(message = "CategoryName can't be blank")
 	@Column(unique = true)
 	private String categoryName;
 

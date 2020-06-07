@@ -7,9 +7,16 @@ import com.ecommerce.basic.models.Product;
 import com.ecommerce.basic.repositories.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
+import static com.ecommerce.basic.utils.Utils.validateBean;
 
 /**
  * @author Shrikant Sharma
@@ -20,11 +27,8 @@ public class CategoryService {
 	@Autowired
 	private CategoryRepository categoryRepository;
 
-
 	public Category createCategory(Category category) {
-		if(category.getCategoryName().length() == 0) {
-			throw new InvalidResourceName(CategoryService.class, "CategoryName can't be empty");
-		}
+		validateBean(category);
 		return categoryRepository.save(category);
 	}
 
@@ -50,6 +54,7 @@ public class CategoryService {
 	public Category updateCategory(String categoryName, Category newCategory) {
 		Category category = getCategoryByName(categoryName);
 		category.setCategoryName(newCategory.getCategoryName());
+		validateBean(category);
 		return categoryRepository.save(category);
 	}
 

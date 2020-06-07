@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
+import static com.ecommerce.basic.utils.Utils.validateBean;
+
 /**
  * @author Shrikant Sharma
  */
@@ -77,14 +79,9 @@ public class UserService {
 		if(!otp.getOtp().equals(otpVerificationRequest.getOtp()) || LocalDateTime.now().isAfter(otp.getGeneratedDatetime().plusMinutes(10))) {
 			throw new InvalidResourceName(UserService.class, "Otp doesn't match/expired, retry please");
 		}
-		validatePassword(otpVerificationRequest.getNewPassword());
 		user.setPassword(otpVerificationRequest.getNewPassword());
-		return userRepository.saveAndFlush(user);
-	}
 
-	private void validatePassword(String newPassword) {
-		if(newPassword == null || newPassword.length() < 4) {
-			throw new InvalidResourceName(UserService.class, "Not a valid Password, password length should be >= 4");
-		}
+		validateBean(user);
+		return userRepository.saveAndFlush(user);
 	}
 }

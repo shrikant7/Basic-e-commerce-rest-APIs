@@ -4,6 +4,10 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 
 /**
  * @author Shrikant Sharma
@@ -15,11 +19,23 @@ public class Product {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int productId;
+
+	@NotBlank(message = "Product name can't be blank")
 	private String name;
+
+	@NotBlank(message = "Product description can't be blank")
+	@Size(max = 1000, message = "Description length can't be greater than 1000")
 	@Column(length = 1000)
 	private String description;
+
+	@NotNull(message = "MRP can't be null")
+	@Positive(message = "MRP should be positive")
 	private Integer mrpPrice;
+
+	@NotNull(message = "MRP can't be null")
+	@Positive(message = "MRP should be positive")
 	private Integer yourPrice;
+
 	private String imageUri;
 
 	/* Ignoring category field in json response of getting all products of a category;

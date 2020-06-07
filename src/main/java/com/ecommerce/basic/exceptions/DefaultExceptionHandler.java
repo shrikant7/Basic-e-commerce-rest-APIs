@@ -1,9 +1,12 @@
 package com.ecommerce.basic.exceptions;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
 
@@ -12,12 +15,12 @@ import java.time.LocalDateTime;
  */
 
 @ControllerAdvice
-public class DefaultExceptionHandler {
+public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
 
-	private ResponseEntity<?> getResponseEntity(String message, HttpStatus status) {
+	private ResponseEntity<Object> getResponseEntity(String message, HttpStatus status) {
 		ApiException apiException = new ApiException(message,
-				status,
-				LocalDateTime.now());
+														status,
+														LocalDateTime.now());
 
 		return new ResponseEntity<>(apiException, status);
 	}
@@ -38,5 +41,10 @@ public class DefaultExceptionHandler {
 	public ResponseEntity<?> handleNotFoundException(RuntimeException e) {
 		HttpStatus status = HttpStatus.NOT_FOUND;
 		return getResponseEntity(e.getMessage(), status);
+	}
+
+	@Override
+	protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
+		return getResponseEntity(ex.getMessage(), status);
 	}
 }

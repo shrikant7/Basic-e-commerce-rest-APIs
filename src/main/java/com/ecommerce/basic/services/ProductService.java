@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.ecommerce.basic.utils.Utils.validateBean;
+
 /**
  * @author Shrikant Sharma
  */
@@ -18,6 +20,7 @@ public class ProductService {
 	ProductRepository productRepository;
 
 	public Product createProduct(Product product) {
+		validateBean(product);
 		return productRepository.save(product);
 	}
 
@@ -42,6 +45,8 @@ public class ProductService {
 				.setMrpPrice(newProduct.getMrpPrice())
 				.setYourPrice(newProduct.getYourPrice())
 				.setImageUri(newProduct.getImageUri());
+
+		validateBean(product);
 		productRepository.save(product);
 		return product;
 	}

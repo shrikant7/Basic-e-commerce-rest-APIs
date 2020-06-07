@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,7 +88,7 @@ public class HomeResource {
 
 	@PostMapping("/users/{userName}/checkout")
 	public OrderItem createOrder(@PathVariable("userName") String userName,
-	                             @RequestBody List<OrderRequest> orderRequest) {
+	                             @Valid @RequestBody List<OrderRequest> orderRequest) {
 		OrderItem orderItem = orderService.createOrder(userName, orderRequest);
 		mailSenderService.sendSimpleMailToAdminCloud(orderItem);
 		return orderItem;
@@ -164,7 +165,7 @@ public class HomeResource {
 	}
 
 	@PutMapping("/categories/{categoryName}")
-	public Category updateCategory(@PathVariable String categoryName, @RequestBody Category newCategory) {
+	public Category updateCategory(@PathVariable String categoryName,@Valid @RequestBody Category newCategory) {
 		return categoryService.updateCategory(categoryName, newCategory);
 	}
 

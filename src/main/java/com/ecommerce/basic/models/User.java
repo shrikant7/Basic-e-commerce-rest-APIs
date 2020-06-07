@@ -6,6 +6,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.List;
 
@@ -20,11 +22,14 @@ public class User implements Serializable {
 	@GeneratedValue
 	private int id;
 
+	@NotBlank(message = "Username can't be blank")
 	@Column(unique = true)
 	private String username;
 
 	@JsonIgnore
 	@ToString.Exclude
+	@NotBlank(message = "Password can't be bank")
+	@Size(message = "Password's length can't be less than 4")
 	private String password;
 
 	private boolean active;
