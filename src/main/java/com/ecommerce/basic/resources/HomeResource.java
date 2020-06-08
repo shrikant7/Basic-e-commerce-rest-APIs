@@ -71,6 +71,11 @@ public class HomeResource {
 		return userService.findByUsername(userName);
 	}
 
+	@GetMapping("/users/{userName}/user-info")
+	public UserInfo getUserInfoByUsername(@PathVariable String userName) {
+		return userService.getUserInfoByUsername(userName);
+	}
+
 	@PostMapping("users/{userName}/generate-otp")
 	public MailDTO generateOtp(@PathVariable String userName) {
 		Otp otp = userService.generateOtp(userName);
@@ -146,6 +151,13 @@ public class HomeResource {
 		final User user = userService.findByUsername(authenticationRequest.getUsername());
 		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
 
+		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
+	}
+
+	@PostMapping("/sign-up")
+	public ResponseEntity<?> signUpUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+		User user = userService.signUpUserRequest(signUpRequest);
+		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
 		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
 	}
 

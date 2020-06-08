@@ -2,14 +2,13 @@ package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
-import com.ecommerce.basic.models.Otp;
-import com.ecommerce.basic.models.OtpVerificationRequest;
-import com.ecommerce.basic.models.User;
+import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.OtpRepository;
 import com.ecommerce.basic.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -83,5 +82,38 @@ public class UserService {
 
 		validateBean(user);
 		return userRepository.saveAndFlush(user);
+	}
+
+	public User signUpUserRequest(SignUpRequest signUpRequest) {
+		UserInfo userInfo = new UserInfo()
+								.setFullName(signUpRequest.getFullName())
+								.setPhoneNumber(signUpRequest.getPhoneNumber())
+								.setEmail(signUpRequest.getEmail())
+								.setAddress(signUpRequest.getAddress())
+								.setCity(signUpRequest.getCity())
+								.setPincode(signUpRequest.getPincode())
+								.setState(signUpRequest.getState());
+		User user = new User()
+						.setUsername(signUpRequest.getUsername())
+						.setPassword(signUpRequest.getPassword())
+						.setActive(true)
+						.setRoles(signUpRequest.getRole())
+						.setUserInfo(userInfo);
+		userInfo.setUser(user);
+
+		if(user.getRoles() == null) {
+			user.setRoles(User.ROLE_USER);
+		} else if(!user.getRoles().equals(User.ROLE_ADMIN) || !user.getRoles().equals(User.ROLE_USER)) {
+			throw new InvalidResourceName(UserService.class, "User's role is not valid");
+		}
+
+		validateBean(user);
+		validateBean(userInfo);
+		return userRepository.saveAndFlush(user);
+	}
+
+	public UserInfo getUserInfoByUsername(String userName) {
+		User user = findByUsername(userName);
+		return user.getUserInfo();
 	}
 }

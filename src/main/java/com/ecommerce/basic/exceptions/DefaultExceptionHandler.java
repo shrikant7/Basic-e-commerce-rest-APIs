@@ -47,4 +47,6 @@ public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
 		return getResponseEntity(ex.getMessage(), status);
 	}
+
+	//TODO:: handle hibernate exception like unique...
 }

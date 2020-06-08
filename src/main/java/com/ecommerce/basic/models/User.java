@@ -7,6 +7,7 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.List;
@@ -18,6 +19,9 @@ import java.util.List;
 @Entity @Table(name = "User")
 @Data @Accessors(chain = true)
 public class User implements Serializable {
+	public static final String ROLE_ADMIN = "ROLE_ADMIN";
+	public static final String ROLE_USER = "ROLE_USER";
+
 	@Id
 	@GeneratedValue
 	private int id;
@@ -28,7 +32,7 @@ public class User implements Serializable {
 
 	@JsonIgnore
 	@ToString.Exclude
-	@NotBlank(message = "Password can't be bank")
+	@NotBlank(message = "Password can't be blank")
 	@Size(message = "Password's length can't be less than 4")
 	private String password;
 
@@ -37,6 +41,7 @@ public class User implements Serializable {
 
 	@JsonIgnore
 	@ToString.Exclude
+	@NotNull(message = "UserInfo is mandatory field")
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
 	private UserInfo userInfo;
 

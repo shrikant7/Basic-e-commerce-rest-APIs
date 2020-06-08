@@ -1,44 +1,41 @@
 package com.ecommerce.basic.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
-import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.io.Serializable;
 
 /**
  * @author Shrikant Sharma
  */
 
-@Entity @Table
 @Data @Accessors(chain = true)
-public class UserInfo implements Serializable {
-	@Id
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "userId")
-	@JsonIgnore @ToString.Exclude
-	private User user;
+public class SignUpRequest {
+	@NotBlank(message = "Username can't be blank")
+	String username;
 
-	@NotBlank(message = "Name can't be blank")
-	private String fullName;
+	@NotBlank(message = "Password can't be blank")
+	@Size(message = "Password's length can't be less than 4")
+	String password;
 
-	@Column(length = 10)
+	String role;
+
+	@NotBlank(message = "FullName can't be blank")
+	String fullName;
+
 	@NotNull(message = "PhoneNumber is a mandatory field")
 	@Size(min = 10, max = 10, message = "Please enter a valid 10 digit Phone Number")
-	private String phoneNumber;
+	String phoneNumber;
 
 	@NotNull(message = "Email is a mandatory field")
 	@Email(message = "Please enter a valid Email")
-	private String email;
+	String email;
 
-	private String address;
-	private String pincode;
-	private String city;
-	private String state;
+	String address;
+	String pincode;
+	String city;
+	String state;
 }
