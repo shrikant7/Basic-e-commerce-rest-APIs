@@ -124,7 +124,7 @@ public class HomeResource {
 	public List<OrderDetailDto> getOrderDetail(@PathVariable("userName") String userName,
 	                                     @PathVariable("itemId") int orderId) {
 		OrderItem orderItem = orderService.getOrderItem(userName, orderId);
-		if(!userName.equals(orderItem.getUser().getUsername())) {
+		if(!userName.equalsIgnoreCase(orderItem.getUser().getUsername())) {
 			throw new NoSuchResourceException(HomeResource.class, "OrderItem does not belongs to User: "+userName);
 		}
 		return orderItem.getOrderDetails().stream().map(this::mapToOrderDetailDto).collect(Collectors.toList());
@@ -235,7 +235,7 @@ public class HomeResource {
 			newProduct.setProductId(product.getProductId());
 			newProduct.setImageUri(product.getImageUri());
 
-			if (newProduct.getName() == null || newProduct.getName().equals("")) {
+			if (newProduct.getName() == null || newProduct.getName().equalsIgnoreCase("")) {
 				newProduct.setName(product.getName());
 			}
 
@@ -254,7 +254,7 @@ public class HomeResource {
 			if (newProduct.getCategory() != null && newProduct.getCategory().getCategoryName() != null) {
 				Category category = categoryService.getCategoryByName(newProduct.getCategory().getCategoryName());
 				newProduct.setCategory(category);
-				if (!category.getCategoryName().equals(categoryName)) {
+				if (!category.getCategoryName().equalsIgnoreCase(categoryName)) {
 					String[] split = product.getImageUri().split("/");
 					String imageName = split[split.length - 1];
 					String newImageName = imageStorageService.moveImage(imageName, category.getCategoryId());

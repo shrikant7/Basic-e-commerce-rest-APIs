@@ -2,6 +2,7 @@ package com.ecommerce.basic.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
@@ -18,7 +19,7 @@ import java.util.List;
 
 @Entity @Table(name = "User")
 @Data @Accessors(chain = true)
-public class User implements Serializable {
+public class User {
 	public static final String ROLE_ADMIN = "ROLE_ADMIN";
 	public static final String ROLE_USER = "ROLE_USER";
 
@@ -41,6 +42,7 @@ public class User implements Serializable {
 
 	@JsonIgnore
 	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
 	@NotNull(message = "UserInfo is mandatory field")
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
 	private UserInfo userInfo;

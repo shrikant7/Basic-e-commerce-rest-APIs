@@ -8,7 +8,6 @@ import com.ecommerce.basic.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -75,7 +74,7 @@ public class UserService {
 		Optional<Otp> optionalOtp = otpRepository.findByUser(user);
 		optionalOtp.orElseThrow(()-> new InvalidResourceName(UserService.class, "Otp expired, please request again"));
 		Otp otp =optionalOtp.get();
-		if(!otp.getOtp().equals(otpVerificationRequest.getOtp()) || LocalDateTime.now().isAfter(otp.getGeneratedDatetime().plusMinutes(10))) {
+		if(!otp.getOtp().equalsIgnoreCase(otpVerificationRequest.getOtp()) || LocalDateTime.now().isAfter(otp.getGeneratedDatetime().plusMinutes(10))) {
 			throw new InvalidResourceName(UserService.class, "Otp doesn't match/expired, retry please");
 		}
 		user.setPassword(otpVerificationRequest.getNewPassword());
@@ -103,7 +102,7 @@ public class UserService {
 
 		if(user.getRoles() == null) {
 			user.setRoles(User.ROLE_USER);
-		} else if(!user.getRoles().equals(User.ROLE_ADMIN) || !user.getRoles().equals(User.ROLE_USER)) {
+		} else if(!user.getRoles().equalsIgnoreCase(User.ROLE_ADMIN) || !user.getRoles().equalsIgnoreCase(User.ROLE_USER)) {
 			throw new InvalidResourceName(UserService.class, "User's role is not valid");
 		}
 

@@ -2,6 +2,7 @@ package com.ecommerce.basic.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
@@ -20,9 +21,10 @@ import java.io.Serializable;
 @Data @Accessors(chain = true)
 public class UserInfo implements Serializable {
 	@Id
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId")
-	@JsonIgnore @ToString.Exclude
 	private User user;
 
 	@NotBlank(message = "Name can't be blank")
