@@ -21,6 +21,7 @@ import java.io.Serializable;
 @Data @Accessors(chain = true)
 public class UserInfo implements Serializable {
 	@Id
+	@JsonIgnore
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@OneToOne(fetch = FetchType.LAZY)

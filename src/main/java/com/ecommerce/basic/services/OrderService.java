@@ -3,6 +3,7 @@ package com.ecommerce.basic.services;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.OrderRepository;
+import com.ecommerce.basic.resources.HomeResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,12 +30,7 @@ public class OrderService {
 		long totalValue = 0;
 		for(OrderRequest orderDetailRequest : orderRequest) {
 			Product product = productService.getProductById(orderDetailRequest.getProductId());
-			OrderDetail orderDetail = new OrderDetail()
-										.setOrderItem(orderItem)
-										.setProduct(product)
-										.setBoughtPrice(product.getYourPrice())
-										.setQuantity(orderDetailRequest.getQuantity())
-										.setProductTotal(product.getYourPrice() * orderDetailRequest.getQuantity());
+			OrderDetail orderDetail = createOrderDetail(orderItem, product, orderDetailRequest.getQuantity());
 			orderDetails.add(orderDetail);
 			totalValue += orderDetail.getProductTotal();
 		}
@@ -45,6 +41,15 @@ public class OrderService {
 				.setPlacedOn(LocalDateTime.now());
 
 		return orderRepository.saveAndFlush(orderItem);
+	}
+
+	private OrderDetail createOrderDetail(OrderItem orderItem, Product product, int quantity) {
+		return new OrderDetail()
+					.setOrderItem(orderItem)
+					.setProduct(product)
+					.setBoughtPrice(product.getYourPrice())
+					.setQuantity(quantity)
+					.setProductTotal(product.getYourPrice() * quantity);
 	}
 
 	//provides orderItems with details
@@ -69,7 +74,33 @@ public class OrderService {
 
 	public OrderItem getOrderItem(String userName, int orderId) {
 		Optional<OrderItem> optionalOrderItem = orderRepository.findById(orderId);
-		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(OrderService.class,"No product found for orderId: "+orderId));
-		return optionalOrderItem.get();
+		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(OrderService.class,"No order found for orderId: "+orderId));
+
+		OrderItem orderItem = optionalOrderItem.get();
+		if(!userName.equalsIgnoreCase(orderItem.getUser().getUsername())) {
+			throw new NoSuchResourceException(HomeResource.class, "OrderItem does not belongs to User: "+userName);
+		}
+		return orderItem;
+	}
+
+	public OrderItem reOrderItem(String userName, int itemId) {
+		User user = userService.findByUsername(userName);
+		OrderItem reOrderItem = getOrderItem(userName, itemId);
+		OrderItem orderItem = new OrderItem();
+		List<OrderDetail> orderDetails = new ArrayList<>();
+		long totalValue = 0;
+		for(OrderDetail detail : reOrderItem.getOrderDetails()) {
+			//TODO:: is detail.getProduct() still exist in our domain
+			OrderDetail orderDetail = createOrderDetail(orderItem, detail.getProduct(), detail.getQuantity());
+			orderDetails.add(orderDetail);
+			totalValue += orderDetail.getProductTotal();
+		}
+
+		orderItem.setUser(user)
+				.setTotalValue(totalValue)
+				.setOrderDetails(orderDetails)
+				.setPlacedOn(LocalDateTime.now());
+
+		return orderRepository.saveAndFlush(orderItem);
 	}
 }

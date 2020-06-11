@@ -32,8 +32,8 @@ public class Product {
 	@Positive(message = "MRP should be positive")
 	private Integer mrpPrice;
 
-	@NotNull(message = "MRP can't be null")
-	@Positive(message = "MRP should be positive")
+	@NotNull(message = "YouPrice can't be null")
+	@Positive(message = "YouPrice should be positive")
 	private Integer yourPrice;
 
 	private String imageUri;

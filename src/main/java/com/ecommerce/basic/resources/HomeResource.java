@@ -124,9 +124,6 @@ public class HomeResource {
 	public List<OrderDetailDto> getOrderDetail(@PathVariable("userName") String userName,
 	                                     @PathVariable("itemId") int orderId) {
 		OrderItem orderItem = orderService.getOrderItem(userName, orderId);
-		if(!userName.equalsIgnoreCase(orderItem.getUser().getUsername())) {
-			throw new NoSuchResourceException(HomeResource.class, "OrderItem does not belongs to User: "+userName);
-		}
 		return orderItem.getOrderDetails().stream().map(this::mapToOrderDetailDto).collect(Collectors.toList());
 	}
 
@@ -136,6 +133,12 @@ public class HomeResource {
 				orderDetail.getBoughtPrice(),
 				orderDetail.getQuantity(),
 				orderDetail.getProductTotal());
+	}
+
+	@PostMapping("/users/{userName}/reorder/{itemId}")
+	public OrderItem reOrderItem(@PathVariable("userName") String userName,
+	                             @PathVariable("itemId") int itemId) {
+		return orderService.reOrderItem(userName, itemId);
 	}
 
 	@PostMapping("/authenticate")

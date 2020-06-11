@@ -10,7 +10,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -40,7 +39,6 @@ public class User {
 	private boolean active;
 	private String roles;
 
-	@JsonIgnore
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@NotNull(message = "UserInfo is mandatory field")

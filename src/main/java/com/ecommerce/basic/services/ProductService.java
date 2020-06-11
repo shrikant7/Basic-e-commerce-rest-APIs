@@ -1,5 +1,6 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.Product;
 import com.ecommerce.basic.repositories.ProductRepository;
@@ -21,6 +22,9 @@ public class ProductService {
 
 	public Product createProduct(Product product) {
 		validateBean(product);
+		if(product.getYourPrice() > product.getMrpPrice()) {
+			throw new InvalidResourceName(ProductService.class, "YourPrice cannot be greater than MrpPrice");
+		}
 		return productRepository.save(product);
 	}
 
