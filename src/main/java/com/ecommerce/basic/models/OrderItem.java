@@ -1,7 +1,7 @@
 package com.ecommerce.basic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -19,6 +19,7 @@ public class OrderItem {
 	@GeneratedValue
 	private int orderId;
 
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "userId")
 	private User user;

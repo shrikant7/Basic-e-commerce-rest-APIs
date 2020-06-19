@@ -12,6 +12,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
+import static javax.persistence.FetchType.LAZY;
+
 /**
  * @author Shrikant Sharma
  */
@@ -42,8 +44,14 @@ public class User {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@NotNull(message = "UserInfo is mandatory field")
-	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+	@OneToOne(fetch = LAZY, mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private UserInfo userInfo;
+
+	@JsonIgnore
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	@OneToOne(fetch = LAZY, mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+	private CartItem cartItem;
 
 	@JsonIgnore
 	@ToString.Exclude

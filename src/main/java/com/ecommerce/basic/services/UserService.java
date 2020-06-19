@@ -102,7 +102,7 @@ public class UserService {
 
 		if(user.getRoles() == null) {
 			user.setRoles(User.ROLE_USER);
-		} else if(!user.getRoles().equalsIgnoreCase(User.ROLE_ADMIN) || !user.getRoles().equalsIgnoreCase(User.ROLE_USER)) {
+		} else if(!user.getRoles().equalsIgnoreCase(User.ROLE_ADMIN) && !user.getRoles().equalsIgnoreCase(User.ROLE_USER)) {
 			throw new InvalidResourceName(UserService.class, "User's role is not valid");
 		}
 

@@ -1,5 +1,7 @@
 package com.ecommerce.basic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.gson.JsonObject;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -40,6 +42,8 @@ public class Product {
 
 	/* Ignoring category field in json response of getting all products of a category;
 	   creates repetition of category object in all product objects.*/
+	@JsonIgnore
+	@EqualsAndHashCode.Exclude
 	@ManyToOne
 	@JoinColumn(name = "categoryId")
 	private Category category;
@@ -51,5 +55,15 @@ public class Product {
 				", mrpPrice=" + mrpPrice +
 				", yourPrice=" + yourPrice +
 				'}';
+	}
+
+	public JsonObject shortenJsonObject() {
+		JsonObject jsonObject = new JsonObject();
+		jsonObject.addProperty("productId",productId);
+		jsonObject.addProperty("name",name);
+		jsonObject.addProperty("mrpPrice",mrpPrice);
+		jsonObject.addProperty("yourPrice",yourPrice);
+
+		return jsonObject;
 	}
 }

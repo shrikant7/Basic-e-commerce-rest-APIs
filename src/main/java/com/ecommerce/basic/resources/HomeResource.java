@@ -1,6 +1,5 @@
 package com.ecommerce.basic.resources;
 
-import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.services.*;
 import com.ecommerce.basic.utils.JwtUtil;
@@ -50,6 +49,8 @@ public class HomeResource {
 	@Autowired
 	private OrderService orderService;
 	@Autowired
+	private CartService cartService;
+	@Autowired
 	private MailSenderService mailSenderService;
 	@Value("${host-address}")
 	private String hostAddress;
@@ -89,6 +90,28 @@ public class HomeResource {
 		User user = userService.verifyOtp(userName, otpVerificationRequest);
 		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
 		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
+	}
+
+	@GetMapping("users/{userName}/cart")
+	public CartItem getCart(@PathVariable String userName) {
+		return cartService.getCartItem(userName);
+	}
+
+	@DeleteMapping("users/{userName}/cart")
+	public CartItem deleteCart(@PathVariable String userName) {
+		return cartService.deleteCart(userName);
+	}
+
+	@PostMapping("users/{userName}/add-to-cart")
+	public CartItem addToCart(@PathVariable String userName,
+	                          @Valid @RequestBody CartDetailRequest detailRequest) {
+		return cartService.addToCart(userName, detailRequest);
+	}
+
+	@DeleteMapping("users/{userName}/remove-from-cart/{cartDetailId}")
+	public CartItem removeFromCart(@PathVariable("userName") String userName,
+	                               @PathVariable("cartDetailId") long cartDetailId) {
+		return cartService.removeFromCart(userName, cartDetailId);
 	}
 
 	@PostMapping("/users/{userName}/checkout")

@@ -91,9 +91,14 @@ public class OrderService {
 		long totalValue = 0;
 		for(OrderDetail detail : reOrderItem.getOrderDetails()) {
 			//TODO:: is detail.getProduct() still exist in our domain
-			OrderDetail orderDetail = createOrderDetail(orderItem, detail.getProduct(), detail.getQuantity());
-			orderDetails.add(orderDetail);
-			totalValue += orderDetail.getProductTotal();
+			try {
+				OrderDetail orderDetail = createOrderDetail(orderItem, detail.getProduct(), detail.getQuantity());
+				orderDetails.add(orderDetail);
+				totalValue += orderDetail.getProductTotal();
+			} catch (Exception e) {
+				System.out.println("Product does not exist now");
+				e.printStackTrace();
+			}
 		}
 
 		orderItem.setUser(user)
@@ -101,6 +106,6 @@ public class OrderService {
 				.setOrderDetails(orderDetails)
 				.setPlacedOn(LocalDateTime.now());
 
-		return orderRepository.saveAndFlush(orderItem);
+		return orderItem;
 	}
 }
