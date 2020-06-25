@@ -80,19 +80,31 @@ public class ImageStorageService {
 	}
 
 	@SneakyThrows
-	public void deleteImage(String imageName) {
-		String[] split = imageName.split("_");
-		String categoryId = split[0];
-		String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
-		GoogleStorageResource resource = (GoogleStorageResource) context.getResource(imagePath);
-		resource.getBlob().delete();
+	public void deleteImage(String imageURI) {
+		Runnable runnable = ()-> {
+			try {
+				String[] split = imageURI.split("/");
+				String imageName = split[split.length - 1];
+				split = imageName.split("_");
+				String categoryId = split[0];
+				String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
+				GoogleStorageResource resource = (GoogleStorageResource) context.getResource(imagePath);
+				resource.getBlob().delete();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		};
+		new Thread(runnable).start();
 	}
 
 	public void deleteAllImages(int categoryId) {
-		Iterable<Blob> blobs = storage.list(bucket, Storage.BlobListOption.currentDirectory(),
-								Storage.BlobListOption.prefix(categoryId+"/")).iterateAll();
-		for (Blob blob : blobs) {
-			blob.delete();
-		}
+		Runnable runnable = () -> {
+			Iterable<Blob> blobs = storage.list(bucket, Storage.BlobListOption.currentDirectory(),
+					Storage.BlobListOption.prefix(categoryId + "/")).iterateAll();
+			for (Blob blob : blobs) {
+				blob.delete();
+			}
+		};
+		new Thread(runnable).start();
 	}
 }

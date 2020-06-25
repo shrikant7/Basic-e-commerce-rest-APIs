@@ -7,6 +7,8 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 
+import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
+
 /**
  * @author Shrikant Sharma
  */
@@ -25,7 +27,7 @@ public class OrderDetail {
 	private OrderItem orderItem;
 
 	@ManyToOne
-	@JoinColumn(name = "product_id", nullable = false)
+	@JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(NO_CONSTRAINT))
 	private Product product;
 
 	private int boughtPrice;

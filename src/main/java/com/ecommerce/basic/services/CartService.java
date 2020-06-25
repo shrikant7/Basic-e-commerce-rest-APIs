@@ -73,7 +73,9 @@ public class CartService {
 		}
 		cartItem.setTotalValue(cartItem.getTotalValue() - removedCartDetail.getProductTotal())
 				.setLastModified(LocalDateTime.now());
-		cartRepository.saveAndFlush(cartItem);
+		cartDetailRepository.deleteById(cartDetailId);
+		//updation of cartItem is flushed after delete query automatically.
+		//cartRepository.saveAndFlush(cartItem);
 		return cartItem;
 	}
 

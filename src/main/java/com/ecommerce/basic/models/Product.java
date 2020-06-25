@@ -56,14 +56,4 @@ public class Product {
 				", yourPrice=" + yourPrice +
 				'}';
 	}
-
-	public JsonObject shortenJsonObject() {
-		JsonObject jsonObject = new JsonObject();
-		jsonObject.addProperty("productId",productId);
-		jsonObject.addProperty("name",name);
-		jsonObject.addProperty("mrpPrice",mrpPrice);
-		jsonObject.addProperty("yourPrice",yourPrice);
-
-		return jsonObject;
-	}
 }

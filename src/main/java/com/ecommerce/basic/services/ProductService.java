@@ -19,10 +19,15 @@ import static com.ecommerce.basic.utils.Utils.validateBean;
 public class ProductService {
 	@Autowired
 	ProductRepository productRepository;
+	@Autowired
+	ImageStorageService imageStorageService;
 
 	public Product createProduct(Product product) {
-		validateBean(product);
+		//delete the stored image if validation failed
+		Runnable deleteImageRunnable = () -> imageStorageService.deleteImage(product.getImageUri());
+		validateBean(product, deleteImageRunnable);
 		if(product.getYourPrice() > product.getMrpPrice()) {
+			deleteImageRunnable.run();
 			throw new InvalidResourceName(ProductService.class, "YourPrice cannot be greater than MrpPrice");
 		}
 		return productRepository.save(product);

@@ -9,6 +9,8 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 
+import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
+
 /**
  * @author Shrikant Sharma
  */
@@ -25,12 +27,11 @@ public class CartDetail {
 	@EqualsAndHashCode.Exclude
 	@JsonIgnore
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cartId")
+	@JoinColumn(name = "cartId", nullable = false)
 	private CartItem cartItem;
 
-	@ManyToOne
-	@JoinColumn(name = "product_id", nullable = false)
-	@JsonIgnoreProperties
+	@OneToOne
+	@JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(NO_CONSTRAINT))
 	private Product product;
 
 	private int quantity;

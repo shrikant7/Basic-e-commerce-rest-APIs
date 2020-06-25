@@ -102,14 +102,14 @@ public class HomeResource {
 		return cartService.deleteCart(userName);
 	}
 
-	@PostMapping("users/{userName}/add-to-cart")
-	public CartItem addToCart(@PathVariable String userName,
+	@PostMapping("users/{userName}/cart/cart-detail")
+	public CartItem createCartDetail(@PathVariable String userName,
 	                          @Valid @RequestBody CartDetailRequest detailRequest) {
 		return cartService.addToCart(userName, detailRequest);
 	}
 
-	@DeleteMapping("users/{userName}/remove-from-cart/{cartDetailId}")
-	public CartItem removeFromCart(@PathVariable("userName") String userName,
+	@DeleteMapping("users/{userName}/cart/cart-detail/{cartDetailId}")
+	public CartItem deleteCartDetail(@PathVariable("userName") String userName,
 	                               @PathVariable("cartDetailId") long cartDetailId) {
 		return cartService.removeFromCart(userName, cartDetailId);
 	}
@@ -297,9 +297,7 @@ public class HomeResource {
 		}
 
 		if(productImage != null && !productImage.isEmpty()) {
-			String[] split = product.getImageUri().split("/");
-			String imageName = split[split.length-1];
-			imageStorageService.deleteImage(imageName);
+			imageStorageService.deleteImage(product.getImageUri());
 			String imageDownloadURI = storeAndGetImageUri(newProduct.getCategory().getCategoryId(), productImage);
 			newProduct.setImageUri(imageDownloadURI);
 		}
@@ -310,9 +308,7 @@ public class HomeResource {
 	public Product deleteSingleProduct(@PathVariable("categoryName") String categoryName,
 	                                   @PathVariable("productId") int productId) {
 		Product product = productService.deleteProductByCategory(categoryName, productId);
-		String[] split = product.getImageUri().split("/");
-		String imageName = split[split.length-1];
-		imageStorageService.deleteImage(imageName);
+		imageStorageService.deleteImage(product.getImageUri());
 		return product;
 	}
 

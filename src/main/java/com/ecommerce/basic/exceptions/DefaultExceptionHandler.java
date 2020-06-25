@@ -1,5 +1,6 @@
 package com.ecommerce.basic.exceptions;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
 		return getResponseEntity(e.getMessage(), status);
 	}
 
-	@ExceptionHandler(value = {NoSuchResourceException.class})
+	@ExceptionHandler(value = {NoSuchResourceException.class, EmptyResultDataAccessException.class})
 	public ResponseEntity<?> handleNotFoundException(RuntimeException e) {
 		HttpStatus status = HttpStatus.NOT_FOUND;
 		return getResponseEntity(e.getMessage(), status);
@@ -49,4 +50,11 @@ public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	//TODO:: handle hibernate exception like unique...
+
+	//handling all other exceptions
+	@ExceptionHandler(value = {Exception.class})
+	public ResponseEntity<?> handleAllException(RuntimeException e) {
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		return getResponseEntity(e.getMessage(), status);
+	}
 }
