@@ -1,10 +1,11 @@
 package com.ecommerce.basic.models;
 
 import lombok.Data;
-import lombok.Value;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+
+import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
 
 /**
  * @author Shrikant Sharma
@@ -15,8 +16,8 @@ import javax.persistence.*;
 public class Highlight {
 	@Id
 	@GeneratedValue
-	private int highlightId;
+	private Long highlightId;
 	@OneToOne
-	@JoinColumn(name = "highlightedProduct", referencedColumnName = "productId")
+	@JoinColumn(name = "highlightedProduct", referencedColumnName = "productId",unique = true, nullable = false, foreignKey = @ForeignKey(NO_CONSTRAINT))
 	private Product highlightedProduct;
 }

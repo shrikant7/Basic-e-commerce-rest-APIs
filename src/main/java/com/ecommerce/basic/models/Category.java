@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import org.hibernate.validator.constraints.UniqueElements;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -19,15 +18,19 @@ import java.util.List;
 @Data @Accessors(chain = true)
 public class Category {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int categoryId;
+	@GeneratedValue
+	private Long categoryId;
 
 	@NotBlank(message = "CategoryName can't be blank")
 	@Column(unique = true)
 	private String categoryName;
 
 	@JsonIgnore
+	private boolean deleted;
+
+	@JsonIgnore
 	@ToString.Exclude
 	@OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+	@Where(clause = "deleted=false")                     //filtering out products which are marked deleted
 	private List<Product> products;
 }

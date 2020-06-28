@@ -72,7 +72,7 @@ public class OrderService {
 		return Collections.emptyList();
 	}
 
-	public OrderItem getOrderItem(String userName, int orderId) {
+	public OrderItem getOrderItem(String userName, long orderId) {
 		Optional<OrderItem> optionalOrderItem = orderRepository.findById(orderId);
 		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(OrderService.class,"No order found for orderId: "+orderId));
 
@@ -83,7 +83,7 @@ public class OrderService {
 		return orderItem;
 	}
 
-	public OrderItem reOrderItem(String userName, int itemId) {
+	public OrderItem reOrderItem(String userName, long itemId) {
 		User user = userService.findByUsername(userName);
 		OrderItem reOrderItem = getOrderItem(userName, itemId);
 		OrderItem orderItem = new OrderItem();

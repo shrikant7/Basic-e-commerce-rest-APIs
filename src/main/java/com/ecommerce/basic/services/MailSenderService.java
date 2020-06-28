@@ -71,7 +71,7 @@ public class MailSenderService {
 		}
 	}
 
-	public void sendSimpleMailOtpToUserCloud(Otp otp) {
+	public void sendSimpleMailOtpToUserCloud(Otp otp, String userMail) {
 		StringBuilder body = new StringBuilder("Dear "+otp.getUser().getUsername()+",\n\n")
 								.append("Your OTP is \""+otp.getOtp()+"\" and will be valid only for next 10 minutes.\n")
 								.append("If you have not requested this, please ignore.\n\n")
@@ -82,7 +82,7 @@ public class MailSenderService {
 			Message msg = new MimeMessage(session);
 			msg.setFrom(new InternetAddress(mailSenderAddress, "Ecommerce Backend"));
 			msg.addRecipient(Message.RecipientType.TO,
-					new InternetAddress(otp.getUser().getUserInfo().getEmail(), "Mr. "+otp.getUser().getUsername()));
+					new InternetAddress(userMail, "Mr. "+otp.getUser().getUsername()));
 			msg.setSubject("Your otp from Basic Ecommerce.");
 			msg.setText(body.toString());
 			Transport.send(msg);

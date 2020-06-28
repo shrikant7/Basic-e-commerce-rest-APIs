@@ -33,7 +33,7 @@ public class ImageStorageService {
 	@Autowired
 	private ApplicationContext context;
 
-	public String storeImage(int categoryId, MultipartFile productImage) {
+	public String storeImage(long categoryId, MultipartFile productImage) {
 		String originalImageName = productImage.getOriginalFilename();
 		String[] nameSplit = originalImageName.split("[.]");
 		if (nameSplit.length != 2 || (!originalImageName.endsWith(".jpg")
@@ -67,7 +67,7 @@ public class ImageStorageService {
 	}
 
 	@SneakyThrows
-	public String moveImage(String imageName, int newCategoryId) {
+	public String moveImage(String imageName, long newCategoryId) {
 		String[] split = imageName.split("_");
 		String categoryId = split[0];
 		String extension = split[1].split("[.]")[1];

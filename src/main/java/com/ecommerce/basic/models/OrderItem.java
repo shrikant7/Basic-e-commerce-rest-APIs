@@ -17,7 +17,7 @@ import java.util.List;
 public class OrderItem {
 	@Id
 	@GeneratedValue
-	private int orderId;
+	private Long orderId;
 
 	@JsonIgnore
 	@ManyToOne

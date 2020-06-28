@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Value
 public class OrderItemDto {
-	int orderId;
+	Long orderId;
 	LocalDateTime placedOn;
 	Long totalValue;
 }

@@ -3,6 +3,7 @@ package com.ecommerce.basic.resources;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.services.*;
 import com.ecommerce.basic.utils.JwtUtil;
+import com.ecommerce.basic.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,16 +81,16 @@ public class HomeResource {
 	@PostMapping("users/{userName}/generate-otp")
 	public MailDTO generateOtp(@PathVariable String userName) {
 		Otp otp = userService.generateOtp(userName);
-		mailSenderService.sendSimpleMailOtpToUserCloud(otp);
-		return new MailDTO(otp.getUser().getUserInfo().getEmail());
+		String email = userService.getUserInfoByUser(otp.getUser()).getEmail();
+		mailSenderService.sendSimpleMailOtpToUserCloud(otp,email);
+		return new MailDTO(email);
 	}
 
 	@PostMapping("users/{userName}/verify-otp")
 	public ResponseEntity<?> verifyOtp(@PathVariable String userName,
 	                                   @RequestBody OtpVerificationRequest otpVerificationRequest) {
 		User user = userService.verifyOtp(userName, otpVerificationRequest);
-		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
-		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
+		return ResponseEntity.ok(createAuthenticationResponse(user));
 	}
 
 	@GetMapping("users/{userName}/cart")
@@ -134,33 +135,19 @@ public class HomeResource {
 	                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
 	                                            @RequestParam(value = "limit", defaultValue = "0") int limit) {
 		List<OrderItem> orderHistory = orderService.getOrderHistory(userName, offset, limit);
-		return orderHistory.stream().map(this::mapToOrderItemDto).collect(Collectors.toList());
-	}
-
-	private OrderItemDto mapToOrderItemDto(OrderItem orderItem) {
-		return new OrderItemDto(orderItem.getOrderId(),
-				orderItem.getPlacedOn(),
-				orderItem.getTotalValue());
+		return orderHistory.stream().map(Utils::mapToOrderItemDto).collect(Collectors.toList());
 	}
 
 	@GetMapping("/users/{userName}/orderItems/{itemId}")
 	public List<OrderDetailDto> getOrderDetail(@PathVariable("userName") String userName,
-	                                     @PathVariable("itemId") int orderId) {
+	                                     @PathVariable("itemId") long orderId) {
 		OrderItem orderItem = orderService.getOrderItem(userName, orderId);
-		return orderItem.getOrderDetails().stream().map(this::mapToOrderDetailDto).collect(Collectors.toList());
-	}
-
-	private OrderDetailDto mapToOrderDetailDto(OrderDetail orderDetail) {
-		Product product = orderDetail.getProduct();
-		return new OrderDetailDto(new ProductDto(product.getProductId(), product.getName(), product.getYourPrice(), product.getImageUri()),
-				orderDetail.getBoughtPrice(),
-				orderDetail.getQuantity(),
-				orderDetail.getProductTotal());
+		return orderItem.getOrderDetails().stream().map(Utils::mapToOrderDetailDto).collect(Collectors.toList());
 	}
 
 	@PostMapping("/users/{userName}/reorder/{itemId}")
 	public OrderItem reOrderItem(@PathVariable("userName") String userName,
-	                             @PathVariable("itemId") int itemId) {
+	                             @PathVariable("itemId") long itemId) {
 		return orderService.reOrderItem(userName, itemId);
 	}
 
@@ -175,16 +162,13 @@ public class HomeResource {
 		}
 
 		final User user = userService.findByUsername(authenticationRequest.getUsername());
-		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
-
-		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
+		return ResponseEntity.ok(createAuthenticationResponse(user));
 	}
 
 	@PostMapping("/sign-up")
 	public ResponseEntity<?> signUpUser(@Valid @RequestBody SignUpRequest signUpRequest) {
 		User user = userService.signUpUserRequest(signUpRequest);
-		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
-		return ResponseEntity.ok(new AuthenticationResponse(jwt, user));
+		return ResponseEntity.ok(createAuthenticationResponse(user));
 	}
 
 	@GetMapping("/categories")
@@ -210,7 +194,7 @@ public class HomeResource {
 	@DeleteMapping("/categories/{categoryName}")
 	public Category deleteCategory(@PathVariable String categoryName) {
 		Category category = categoryService.deleteCategory(categoryName);
-		imageStorageService.deleteAllImages(category.getCategoryId());
+		//imageStorageService.deleteAllImages(category.getCategoryId());
 		return category;
 	}
 
@@ -230,12 +214,13 @@ public class HomeResource {
 
 		Product product = objectMapper.readValue(productJson,Product.class)
 										.setCategory(category)
-										.setImageUri(imageDownloadURI);
+										.setImageUri(imageDownloadURI)
+										.setDeleted(false);
 
 		return productService.createProduct(product);
 	}
 
-	private String storeAndGetImageUri(int categoryId, MultipartFile productImage) {
+	private String storeAndGetImageUri(long categoryId, MultipartFile productImage) {
 		String imageName = imageStorageService.storeImage(categoryId, productImage);
 		return ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
 										.path("api/downloadImage/")
@@ -244,22 +229,23 @@ public class HomeResource {
 
 	@GetMapping("/categories/{categoryName}/products/{productId}")
 	public Product getSingleProduct(@PathVariable("categoryName") String categoryName,
-	                                @PathVariable("productId") int productId) {
-		return productService.getProductByCategory(categoryName, productId);
+	                                @PathVariable("productId") long productId) {
+		return productService.getProductUnderCategory(categoryName, productId);
 	}
 
 	@PutMapping(value = "/categories/{categoryName}/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Product updateSingleProduct(@PathVariable("categoryName") String categoryName,
-	                                   @PathVariable("productId") int productId,
+	                                   @PathVariable("productId") long productId,
 	                                   @RequestParam(value = "productJson", required = false) String productJson,
 	                                   @RequestParam(value = "file", required = false) MultipartFile productImage) throws IOException {
-		Product product = productService.getProductByCategory(categoryName, productId);
+		Product product = productService.getProductUnderCategory(categoryName, productId);
 
 		Product newProduct;
 		if(productJson != null) {
 			newProduct = objectMapper.readValue(productJson, Product.class);
 			newProduct.setProductId(product.getProductId());
 			newProduct.setImageUri(product.getImageUri());
+			newProduct.setDeleted(false);
 
 			if (newProduct.getName() == null || newProduct.getName().equalsIgnoreCase("")) {
 				newProduct.setName(product.getName());
@@ -306,9 +292,9 @@ public class HomeResource {
 
 	@DeleteMapping("/categories/{categoryName}/products/{productId}")
 	public Product deleteSingleProduct(@PathVariable("categoryName") String categoryName,
-	                                   @PathVariable("productId") int productId) {
+	                                   @PathVariable("productId") long productId) {
 		Product product = productService.deleteProductByCategory(categoryName, productId);
-		imageStorageService.deleteImage(product.getImageUri());
+		//imageStorageService.deleteImage(product.getImageUri());
 		return product;
 	}
 
@@ -318,19 +304,19 @@ public class HomeResource {
 	}
 
 	@PostMapping("/highlights")
-	public Highlight createHighlight(@RequestParam int productId) {
+	public Highlight createHighlight(@RequestParam long productId) {
 		return highlightService.createHighlight(productId);
 	}
 
 	@DeleteMapping("/highlights/{highlightId}")
-	public Highlight deleteHighlight(@PathVariable("highlightId") int highlightId) {
+	public Highlight deleteHighlight(@PathVariable("highlightId") long highlightId) {
 		return highlightService.deleteHighlight(highlightId);
 	}
 
 	@GetMapping("/downloadImage/{imageName}")
 	public ResponseEntity<Resource> downloadFile(@PathVariable String imageName, HttpServletRequest request) {
 		Resource resource = imageStorageService.loadImageAsResource(imageName);
-		String contentType = null;
+		String contentType;
 		contentType = request.getServletContext().getMimeType(imageName);
 
 		//if we are not able to determine it contentType then mark it unknown binary object;
@@ -340,5 +326,12 @@ public class HomeResource {
 		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
 				.header(HttpHeaders.CONTENT_DISPOSITION,resource.getFilename())
 				.body(resource);
+	}
+
+	private AuthenticationResponse createAuthenticationResponse(User user) {
+		final UserInfo userInfo = userService.getUserInfoByUser(user);
+		final UserWithInfoDto userWithInfoDto = Utils.mapToUserWithInfoDto(user,userInfo);
+		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
+		return new AuthenticationResponse(jwt, userWithInfoDto);
 	}
 }

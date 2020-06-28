@@ -1,7 +1,6 @@
 package com.ecommerce.basic.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.gson.JsonObject;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -19,8 +18,8 @@ import javax.validation.constraints.Size;
 @Data @Accessors(chain = true)
 public class Product {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int productId;
+	@GeneratedValue
+	private Long productId;
 
 	@NotBlank(message = "Product name can't be blank")
 	private String name;
@@ -40,11 +39,14 @@ public class Product {
 
 	private String imageUri;
 
+	@JsonIgnore
+	private boolean deleted;
+
 	/* Ignoring category field in json response of getting all products of a category;
 	   creates repetition of category object in all product objects.*/
 	@JsonIgnore
 	@EqualsAndHashCode.Exclude
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "categoryId")
 	private Category category;
 

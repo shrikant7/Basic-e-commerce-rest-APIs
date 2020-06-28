@@ -8,8 +8,9 @@ import lombok.Value;
 
 @Value
 public class ProductDto {
-	int productId;
+	Long productId;
 	String name;
 	Integer mrpPrice;
 	String imageUri;
+	boolean isDeleted;
 }

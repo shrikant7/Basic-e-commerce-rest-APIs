@@ -4,6 +4,7 @@ import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.OtpRepository;
+import com.ecommerce.basic.repositories.UserInfoRepository;
 import com.ecommerce.basic.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ import static com.ecommerce.basic.utils.Utils.validateBean;
 
 @Service
 public class UserService {
+	@Autowired
+	private UserInfoRepository userInfoRepository;
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
@@ -84,21 +87,20 @@ public class UserService {
 	}
 
 	public User signUpUserRequest(SignUpRequest signUpRequest) {
-		UserInfo userInfo = new UserInfo()
-								.setFullName(signUpRequest.getFullName())
-								.setPhoneNumber(signUpRequest.getPhoneNumber())
-								.setEmail(signUpRequest.getEmail())
-								.setAddress(signUpRequest.getAddress())
-								.setCity(signUpRequest.getCity())
-								.setPincode(signUpRequest.getPincode())
-								.setState(signUpRequest.getState());
 		User user = new User()
 						.setUsername(signUpRequest.getUsername())
 						.setPassword(signUpRequest.getPassword())
 						.setActive(true)
-						.setRoles(signUpRequest.getRole())
-						.setUserInfo(userInfo);
-		userInfo.setUser(user);
+						.setRoles(signUpRequest.getRole());
+		UserInfo userInfo = new UserInfo()
+				.setFullName(signUpRequest.getFullName())
+				.setPhoneNumber(signUpRequest.getPhoneNumber())
+				.setEmail(signUpRequest.getEmail())
+				.setAddress(signUpRequest.getAddress())
+				.setCity(signUpRequest.getCity())
+				.setPincode(signUpRequest.getPincode())
+				.setState(signUpRequest.getState())
+				.setUser(user);
 
 		if(user.getRoles() == null) {
 			user.setRoles(User.ROLE_USER);
@@ -108,11 +110,17 @@ public class UserService {
 
 		validateBean(user);
 		validateBean(userInfo);
-		return userRepository.saveAndFlush(user);
+		User savedUser = userRepository.save(user);
+		userInfoRepository.saveAndFlush(userInfo);
+		return savedUser;
+	}
+
+	public UserInfo getUserInfoByUser(User user) {
+		return userInfoRepository.findByUser(user);
 	}
 
 	public UserInfo getUserInfoByUsername(String userName) {
 		User user = findByUsername(userName);
-		return user.getUserInfo();
+		return getUserInfoByUser(user);
 	}
 }

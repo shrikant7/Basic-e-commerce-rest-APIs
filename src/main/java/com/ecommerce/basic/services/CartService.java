@@ -29,30 +29,46 @@ public class CartService {
 
 	public CartItem getCartItem(String userName) {
 		User user = userService.findByUsername(userName);
-		return refreshCartItem(user);
-	}
-
-	private CartItem refreshCartItem(User user) {
-		CartItem cartItem = user.getCartItem();
+		CartItem cartItem = cartRepository.findByUser(user);
 		if(cartItem == null) {
 			return new CartItem()
+					//setting user as used by addToCart and user is required to create new detail
 					.setUser(user);
 		}
+		return refreshCartItem(cartItem);
+	}
+
+	private CartItem refreshCartItem(CartItem cartItem) {
 		long totalValue = 0;
 		boolean detailsChanged = false;
-		//TODO:: what if product is not there
+		List<CartDetail> expiredDetails = new ArrayList<>();
 		for(CartDetail cartDetail : cartItem.getCartDetails()) {
+			//check if product is marked deleted or not
+			if(cartDetail.getProduct().isDeleted()) {
+				expiredDetails.add(cartDetail);
+				continue;
+			}
+
 			int yourPrice = cartDetail.getProduct().getYourPrice();
 			int quantity = cartDetail.getQuantity();
 			long productTotal = yourPrice * quantity;
 			totalValue += productTotal;
+			//update cartDetail's total value if any product's price changes
 			if(cartDetail.getProductTotal() != productTotal) {
 				cartDetail.setProductTotal(productTotal);
 				detailsChanged = true;
 			}
 		}
-		cartItem.setTotalValue(totalValue);
-		if(detailsChanged) {
+
+		//remove all expiredDetail from database as well as itemDetails
+		if(expiredDetails.size() > 0) {
+			cartItem.getCartDetails().removeAll(expiredDetails);
+			cartDetailRepository.deleteAll(expiredDetails);
+		}
+
+		// if any cartDetail changed or product is not exist now, update cartItem's total value
+		if(detailsChanged || totalValue != cartItem.getTotalValue()) {
+			cartItem.setTotalValue(totalValue);
 			cartRepository.saveAndFlush(cartItem);
 		}
 		return cartItem;
@@ -93,7 +109,6 @@ public class CartService {
 
 	public CartItem addToCart(String userName, CartDetailRequest detailRequest) {
 		CartItem cartItem = getCartItem(userName);
-		System.out.println(cartItem +" user:"+cartItem.getUser());
 		List<CartDetail> cartDetails = cartItem.getCartDetails();
 		if(cartDetails == null){
 			cartDetails = new ArrayList<>();
@@ -129,5 +144,11 @@ public class CartService {
 
 	public CartItem addToCartBatch(String userName, List<OrderRequest> orderRequests) {
 		return null;
+	}
+
+
+	public void deleteProductFromAnyCartDetail(Product product) {
+		int deletedRow = cartDetailRepository.deleteByProductQuery(product);
+		//System.err.println("deletedRow: "+deletedRow);
 	}
 }

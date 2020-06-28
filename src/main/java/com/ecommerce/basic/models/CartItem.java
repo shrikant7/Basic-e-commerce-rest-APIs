@@ -21,7 +21,7 @@ import java.util.List;
 public class CartItem {
 	@Id
 	@GeneratedValue
-	private int cartId;
+	private Long cartId;
 
 	@JsonIgnore
 	@ToString.Exclude

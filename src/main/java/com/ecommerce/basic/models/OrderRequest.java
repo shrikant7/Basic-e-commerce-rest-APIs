@@ -11,7 +11,7 @@ import javax.validation.constraints.Positive;
 
 @Data @Accessors(chain = true)
 public class OrderRequest {
-	private int productId;
+	private long productId;
 	@Positive(message = "Quantity should be positive")
 	private int quantity;
 }

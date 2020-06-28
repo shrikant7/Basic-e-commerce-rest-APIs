@@ -18,7 +18,7 @@ import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
 public class OrderDetail {
 	@Id
 	@GeneratedValue
-	private long orderDetailId;
+	private Long orderDetailId;
 
 	@ToString.Exclude
 	@JsonIgnore

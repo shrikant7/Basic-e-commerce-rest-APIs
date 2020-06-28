@@ -21,6 +21,9 @@ import java.io.Serializable;
 @Data @Accessors(chain = true)
 public class UserInfo implements Serializable {
 	@Id
+	@GeneratedValue
+	private Long userInfoId;
+
 	@JsonIgnore
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude

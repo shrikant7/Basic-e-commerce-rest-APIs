@@ -7,6 +7,7 @@ import com.ecommerce.basic.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.ecommerce.basic.utils.Utils.validateBean;
@@ -17,6 +18,10 @@ import static com.ecommerce.basic.utils.Utils.validateBean;
 
 @Service
 public class ProductService {
+	@Autowired
+	CartService cartService;
+	@Autowired
+	HighlightService highlightService;
 	@Autowired
 	ProductRepository productRepository;
 	@Autowired
@@ -30,16 +35,20 @@ public class ProductService {
 			deleteImageRunnable.run();
 			throw new InvalidResourceName(ProductService.class, "YourPrice cannot be greater than MrpPrice");
 		}
-		return productRepository.save(product);
+		return productRepository.saveAndFlush(product);
 	}
 
-	public Product getProductById(int productId) {
+	public Product getProductById(long productId) {
 		Optional<Product> optionalProduct = productRepository.findById(productId);
 		optionalProduct.orElseThrow(() -> new NoSuchResourceException(ProductService.class, "No product found for productId: " + productId));
-		return optionalProduct.get();
+		Product product = optionalProduct.get();
+		if(product.isDeleted()) {
+			throw new NoSuchResourceException(ProductService.class, "Product:"+productId+" is deleted");
+		}
+		return product;
 	}
 
-	public Product getProductByCategory(String categoryName, int productId) {
+	public Product getProductUnderCategory(String categoryName, long productId) {
 		Product product = getProductById(productId);
 		if(!product.getCategory().getCategoryName().equalsIgnoreCase(categoryName)) {
 			throw new NoSuchResourceException(ProductService.class, "Product does not belongs to category: "+categoryName);
@@ -53,16 +62,34 @@ public class ProductService {
 				.setDescription(newProduct.getDescription())
 				.setMrpPrice(newProduct.getMrpPrice())
 				.setYourPrice(newProduct.getYourPrice())
-				.setImageUri(newProduct.getImageUri());
+				.setImageUri(newProduct.getImageUri())
+				//product cannot be marked deleted in update query
+				.setDeleted(false);
 
 		validateBean(product);
-		productRepository.save(product);
+		productRepository.saveAndFlush(product);
 		return product;
 	}
 
-	public Product deleteProductByCategory(String categoryName, int productId) {
-		Product product = getProductByCategory(categoryName, productId);
-		productRepository.delete(product);
+	//soft deleting products; marking them deleted
+	public Product deleteProductByCategory(String categoryName, long productId) {
+		Product product = getProductUnderCategory(categoryName, productId);
+		/* will update cart and highlight in next fetch by user
+
+		//delete cartDetail if this product is embedded in it
+		cartService.deleteProductFromAnyCartDetail(product);
+
+		//delete highlight if this product is embedded in it
+		highlightService.deleteProductFromAnyHighlight(product);*/
+
+		//mark product as deleted
+		product.setDeleted(true);
+		productRepository.flush();
 		return product;
+	}
+
+	public void deleteAllProducts(List<Product> products) {
+		int marked = productRepository.markAllProductDeleted(products);
+		System.err.println(marked+" products marked deleted");
 	}
 }

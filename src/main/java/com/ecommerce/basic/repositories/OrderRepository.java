@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 /**
  * @author Shrikant Sharma
  */
-public interface OrderRepository extends JpaRepository<OrderItem,Integer> {
+public interface OrderRepository extends JpaRepository<OrderItem,Long> {
 }

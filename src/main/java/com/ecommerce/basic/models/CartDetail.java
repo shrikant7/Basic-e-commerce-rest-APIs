@@ -1,7 +1,6 @@
 package com.ecommerce.basic.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -21,7 +20,7 @@ public class CartDetail {
 
 	@Id
 	@GeneratedValue
-	private long cartDetailId;
+	private Long cartDetailId;
 
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
