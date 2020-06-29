@@ -7,6 +7,7 @@ import com.ecommerce.basic.repositories.OtpRepository;
 import com.ecommerce.basic.repositories.UserInfoRepository;
 import com.ecommerce.basic.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,11 +24,13 @@ import static com.ecommerce.basic.utils.Utils.validateBean;
 @Service
 public class UserService {
 	@Autowired
-	private UserInfoRepository userInfoRepository;
+	private OtpRepository otpRepository;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
-	private OtpRepository otpRepository;
+	private UserInfoRepository userInfoRepository;
 
 	public User findByUsername(String username) {
 		Optional<User> optionalUser = userRepository.findByUsername(username);
@@ -89,7 +92,7 @@ public class UserService {
 	public User signUpUserRequest(SignUpRequest signUpRequest) {
 		User user = new User()
 						.setUsername(signUpRequest.getUsername())
-						.setPassword(signUpRequest.getPassword())
+						.setPassword(passwordEncoder.encode(signUpRequest.getPassword()))
 						.setActive(true)
 						.setRoles(signUpRequest.getRole());
 		UserInfo userInfo = new UserInfo()

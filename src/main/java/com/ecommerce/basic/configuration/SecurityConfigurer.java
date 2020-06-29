@@ -10,7 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -55,9 +55,10 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 		return super.authenticationManagerBean();
 	}
 
+	//BCrypt is stronger encoder than MD5PasswordEncoder and ShaPasswordEncoder
+	//this bean is used by spring authenticationManager for authentication
 	@Bean
-	//TODO:: change the encoder later.
-	public PasswordEncoder getPassword(){
-		return NoOpPasswordEncoder.getInstance();
+	public PasswordEncoder getPasswordEncoder(){
+		return new BCryptPasswordEncoder();
 	}
 }
