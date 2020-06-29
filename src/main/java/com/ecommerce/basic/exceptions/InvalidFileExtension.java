@@ -3,9 +3,9 @@ package com.ecommerce.basic.exceptions;
 /**
  * @author Shrikant Sharma
  */
-public class InvalidFileExtension extends RuntimeException {
+public class InvalidFileExtension extends BaseException {
 
-	public InvalidFileExtension(String msg) {
-		super(msg);
+	public InvalidFileExtension(ErrorConstant.ErrorCode errorCode, String msg) {
+		super(errorCode, msg);
 	}
 }

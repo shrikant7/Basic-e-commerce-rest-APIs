@@ -1,5 +1,6 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.CartDetailRepository;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.NO_CART_DETAIL_EXCEPTION;
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.NO_CART_DETAIL_IN_USER_EXCEPTION;
 
 /**
  * @author Shrikant Sharma
@@ -88,7 +92,7 @@ public class CartService {
 			}
 		}
 		if(removedCartDetail == null) {
-			throw new NoSuchResourceException(CartService.class, "No cartDetailId:"+cartDetailId+" found for username: "+userName);
+			throw new NoSuchResourceException(NO_CART_DETAIL_IN_USER_EXCEPTION, "No cartDetailId:"+cartDetailId+" found for username: "+userName);
 		}
 		cartItem.setTotalValue(cartItem.getTotalValue() - removedCartDetail.getProductTotal())
 				.setLastModified(LocalDateTime.now());
@@ -100,7 +104,7 @@ public class CartService {
 
 	private CartDetail getCartDetail(long cartDetailId) {
 		Optional<CartDetail> optionalCartDetail = cartDetailRepository.findById(cartDetailId);
-		optionalCartDetail.orElseThrow(()->new NoSuchResourceException(CartService.class, "No cartDetail found for cartDetailId: "+cartDetailId));
+		optionalCartDetail.orElseThrow(()->new NoSuchResourceException(NO_CART_DETAIL_EXCEPTION, "No cartDetail found for cartDetailId: "+cartDetailId));
 		return optionalCartDetail.get();
 	}
 

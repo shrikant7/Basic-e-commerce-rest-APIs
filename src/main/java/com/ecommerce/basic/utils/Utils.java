@@ -1,5 +1,6 @@
 package com.ecommerce.basic.utils;
 
+import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.models.*;
 
@@ -7,6 +8,8 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.util.Set;
+
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.BEAN_VALIDATION_EXCEPTION;
 
 /**
  * @author Shrikant Sharma
@@ -23,7 +26,7 @@ public class Utils {
 		for (ConstraintViolation<T> violation : violations) {
 			//running on same thread, runnable will decide to run parallel or not
 			afterViolationRunnable.run();
-			throw new InvalidResourceName(object.getClass(), violation.getMessage());
+			throw new InvalidResourceName(BEAN_VALIDATION_EXCEPTION, violation.getMessage());
 		}
 	}
 

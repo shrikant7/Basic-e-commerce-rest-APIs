@@ -1,6 +1,7 @@
 package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
+import com.ecommerce.basic.exceptions.UniqueKeyViolationException;
 import com.ecommerce.basic.models.Category;
 import com.ecommerce.basic.models.Product;
 import com.ecommerce.basic.repositories.CategoryRepository;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.*;
 import static com.ecommerce.basic.utils.Utils.validateBean;
 
 /**
@@ -26,25 +28,29 @@ public class CategoryService {
 
 	public Category createCategory(Category category) {
 		validateBean(category);
-		return categoryRepository.save(category);
+		try {
+			return categoryRepository.saveAndFlush(category);
+		} catch(Exception e) {
+			throw new UniqueKeyViolationException(UNIQUE_CATEGORY_EXCEPTION, "CategoryName already exist");
+		}
 	}
 
 	public Category getCategoryByID(long categoryId) {
 		Optional<Category> optionalCategory = categoryRepository.findById(categoryId);
-		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "No category found for categoryID: "+categoryId));
+		optionalCategory.orElseThrow(() -> new NoSuchResourceException(NO_CATEGORY_ID_EXCEPTION, "No category found for categoryID: "+categoryId));
 		Category category = optionalCategory.get();
 		if(category.isDeleted()) {
-			throw new NoSuchResourceException(CategoryService.class, "Category:"+categoryId+" is deleted");
+			throw new NoSuchResourceException(DELETED_CATEGORY_ID_EXCEPTION, "Category:"+categoryId+" is deleted");
 		}
 		return category;
 	}
 
 	public Category getCategoryByName(String categoryName) {
 		Optional<Category> optionalCategory = categoryRepository.findByCategoryName(categoryName);
-		optionalCategory.orElseThrow(() -> new NoSuchResourceException(CategoryService.class, "No category found for categoryName: "+categoryName));
+		optionalCategory.orElseThrow(() -> new NoSuchResourceException(NO_CATEGORY_NAME_EXCEPTION, "No category found for categoryName: "+categoryName));
 		Category category = optionalCategory.get();
 		if(category.isDeleted()) {
-			throw new NoSuchResourceException(CategoryService.class, "Category:"+categoryName+" is deleted");
+			throw new NoSuchResourceException(DELETED_CATEGORY_NAME_EXCEPTION, "Category:"+categoryName+" is deleted");
 		}
 		return category;
 	}

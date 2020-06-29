@@ -1,5 +1,6 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.Product;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.*;
 import static com.ecommerce.basic.utils.Utils.validateBean;
 
 /**
@@ -33,17 +35,17 @@ public class ProductService {
 		validateBean(product, deleteImageRunnable);
 		if(product.getYourPrice() > product.getMrpPrice()) {
 			deleteImageRunnable.run();
-			throw new InvalidResourceName(ProductService.class, "YourPrice cannot be greater than MrpPrice");
+			throw new InvalidResourceName(INVALID_YOUR_PRICE, "YourPrice cannot be greater than MrpPrice");
 		}
 		return productRepository.saveAndFlush(product);
 	}
 
 	public Product getProductById(long productId) {
 		Optional<Product> optionalProduct = productRepository.findById(productId);
-		optionalProduct.orElseThrow(() -> new NoSuchResourceException(ProductService.class, "No product found for productId: " + productId));
+		optionalProduct.orElseThrow(() -> new NoSuchResourceException(NO_PRODUCT_ID_EXCEPTION, "No product found for productId: " + productId));
 		Product product = optionalProduct.get();
 		if(product.isDeleted()) {
-			throw new NoSuchResourceException(ProductService.class, "Product:"+productId+" is deleted");
+			throw new NoSuchResourceException(DELETED_PRODUCT_EXCEPTION, "Product:"+productId+" is deleted");
 		}
 		return product;
 	}
@@ -51,7 +53,7 @@ public class ProductService {
 	public Product getProductUnderCategory(String categoryName, long productId) {
 		Product product = getProductById(productId);
 		if(!product.getCategory().getCategoryName().equalsIgnoreCase(categoryName)) {
-			throw new NoSuchResourceException(ProductService.class, "Product does not belongs to category: "+categoryName);
+			throw new NoSuchResourceException(NO_PRODUCT_IN_CATEGORY_EXCEPTION, "Product does not belongs to category: "+categoryName);
 		}
 		return product;
 	}

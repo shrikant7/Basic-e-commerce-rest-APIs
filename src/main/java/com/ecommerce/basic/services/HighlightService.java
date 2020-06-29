@@ -1,6 +1,7 @@
 package com.ecommerce.basic.services;
 
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
+import com.ecommerce.basic.exceptions.UniqueKeyViolationException;
 import com.ecommerce.basic.models.Highlight;
 import com.ecommerce.basic.models.Product;
 import com.ecommerce.basic.repositories.HighlightRepository;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.NO_HIGHLIGHT_ID_EXCEPTION;
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.UNIQUE_HIGHLIGHT_EXCEPTION;
 
 /**
  * @author Shrikant Sharma
@@ -37,14 +41,18 @@ public class HighlightService {
 
 	public Highlight getHighlightById(long highlightId) {
 		Optional<Highlight> optionalHighlight = highlightRepository.findById(highlightId);
-		optionalHighlight.orElseThrow(() -> new NoSuchResourceException(HighlightService.class, "No Highlight found for highlightId: "+highlightId));
+		optionalHighlight.orElseThrow(() -> new NoSuchResourceException(NO_HIGHLIGHT_ID_EXCEPTION, "No Highlight found for highlightId: "+highlightId));
 		return optionalHighlight.get();
 	}
 
 	public Highlight createHighlight(long productId) {
 		Product product = productService.getProductById(productId);
 		Highlight highlight = new Highlight().setHighlightedProduct(product);
-		return highlightRepository.save(highlight);
+		try {
+			return highlightRepository.save(highlight);
+		} catch(Exception e) {
+			throw new UniqueKeyViolationException(UNIQUE_HIGHLIGHT_EXCEPTION, "Product already exist in highlight");
+		}
 	}
 
 	public Highlight deleteHighlight(long highlightId) {

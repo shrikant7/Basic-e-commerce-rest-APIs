@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.OutputStream;
 
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.*;
+
 /**
  * @author Shrikant Sharma
  */
@@ -38,7 +40,7 @@ public class ImageStorageService {
 		String[] nameSplit = originalImageName.split("[.]");
 		if (nameSplit.length != 2 || (!originalImageName.endsWith(".jpg")
 				&& !originalImageName.endsWith(".jpeg") && !originalImageName.endsWith(".png"))) {
-			throw new InvalidFileExtension("INVALID name/extension of Image: " + originalImageName);
+			throw new InvalidFileExtension(INVALID_IMAGE_EXTENSION, "INVALID name/extension of Image: " + originalImageName);
 		}
 
 		try {
@@ -51,7 +53,7 @@ public class ImageStorageService {
 			}
 			return newImageName;
 		} catch (Exception e) {
-			throw new FileStorageException("Could not store image. Please try again", e);
+			throw new FileStorageException(FILE_STORAGE_EXCEPTION, "Could not store image. Please try again", e);
 		}
 	}
 
@@ -62,7 +64,7 @@ public class ImageStorageService {
 		if (resource.exists()) {
 			return resource;
 		} else {
-			throw new NoSuchResourceException(ImageStorageService.class,"Image not found for categoryId: "+categoryId);
+			throw new NoSuchResourceException(NO_IMAGE_IN_CATEGORY_EXCEPTION,"Image not found for categoryId: "+categoryId);
 		}
 	}
 

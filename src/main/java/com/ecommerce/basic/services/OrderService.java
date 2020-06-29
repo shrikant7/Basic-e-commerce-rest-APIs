@@ -1,5 +1,6 @@
 package com.ecommerce.basic.services;
 
+import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.OrderRepository;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.NO_ORDER_EXCEPTION;
+import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.NO_ORDER_IN_USER_EXCEPTION;
 
 /**
  * @author Shrikant Sharma
@@ -77,11 +81,11 @@ public class OrderService {
 
 	public OrderItem getOrderItem(String userName, long orderId) {
 		Optional<OrderItem> optionalOrderItem = orderRepository.findById(orderId);
-		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(OrderService.class,"No order found for orderId: "+orderId));
+		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(NO_ORDER_EXCEPTION,"No order found for orderId: "+orderId));
 
 		OrderItem orderItem = optionalOrderItem.get();
 		if(!userName.equalsIgnoreCase(orderItem.getUser().getUsername())) {
-			throw new NoSuchResourceException(HomeResource.class, "OrderItem does not belongs to User: "+userName);
+			throw new NoSuchResourceException(NO_ORDER_IN_USER_EXCEPTION, "OrderItem does not belongs to User: "+userName);
 		}
 		return orderItem;
 	}

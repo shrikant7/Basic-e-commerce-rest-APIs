@@ -1,13 +1,11 @@
 package com.ecommerce.basic.exceptions;
 
-import java.io.IOException;
-
 /**
  * @author Shrikant Sharma
  */
-public class FileStorageException extends RuntimeException {
+public class FileStorageException extends BaseException {
 
-	public FileStorageException(String message, Exception cause) {
-		super(message, cause);
+	public FileStorageException(ErrorConstant.ErrorCode errorCode, String message, Exception cause) {
+		super(errorCode, message, cause);
 	}
 }
