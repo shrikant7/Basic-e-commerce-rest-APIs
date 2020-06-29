@@ -145,8 +145,9 @@ public class HomeResource {
 		return orderItem.getOrderDetails().stream().map(Utils::mapToOrderDetailDto).collect(Collectors.toList());
 	}
 
+	//add now available products to cart from orderItem
 	@PostMapping("/users/{userName}/reorder/{itemId}")
-	public OrderItem reOrderItem(@PathVariable("userName") String userName,
+	public CartItem reOrderItem(@PathVariable("userName") String userName,
 	                             @PathVariable("itemId") long itemId) {
 		return orderService.reOrderItem(userName, itemId);
 	}

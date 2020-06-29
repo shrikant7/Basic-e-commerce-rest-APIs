@@ -8,9 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Shrikant Sharma
@@ -29,6 +28,10 @@ public class CartService {
 
 	public CartItem getCartItem(String userName) {
 		User user = userService.findByUsername(userName);
+		return getCartItem(user);
+	}
+
+	private CartItem getCartItem(User user) {
 		CartItem cartItem = cartRepository.findByUser(user);
 		if(cartItem == null) {
 			return new CartItem()
@@ -142,8 +145,39 @@ public class CartService {
 		return cartItem;
 	}
 
-	public CartItem addToCartBatch(String userName, List<OrderRequest> orderRequests) {
-		return null;
+	public CartItem addToCartBatch(String userName, List<CartDetailRequest> cartDetailRequests) {
+		CartItem cartItem = getCartItem(userName);
+		List<CartDetail> cartDetails = cartItem.getCartDetails();
+		if(cartDetails == null){
+			cartDetails = new ArrayList<>();
+		}
+		Map<Long, Integer> detailMap = cartDetailRequests.stream()
+				.collect(Collectors.toMap(CartDetailRequest::getProductId, CartDetailRequest::getQuantity, (o, n) -> n));
+
+		//merge common products in cart and detailRequest
+		cartDetails.forEach(cd->{
+			Long productId = cd.getProduct().getProductId();
+			if(detailMap.containsKey(productId)) {
+				cd.setQuantity(cd.getQuantity()+detailMap.get(productId));
+				detailMap.remove(productId);
+			}
+		});
+
+		//add all remaining detailRequests in cart
+		List<CartDetail> finalCartDetails = cartDetails;
+		detailMap.forEach((key, value) -> {
+			Product product = productService.getProductById(key);
+			CartDetail cartDetail = new CartDetail()
+					.setCartItem(cartItem)
+					.setProduct(product)
+					.setQuantity(value);
+			finalCartDetails.add(cartDetail);
+		});
+
+		//as content of cart is modified by user, set lastModified field
+		cartItem.setCartDetails(finalCartDetails).setLastModified(LocalDateTime.now());
+		//refreshing cartItem will set ans save to db about cartDetail price and total value of item
+		return refreshCartItem(cartItem);
 	}
 
 

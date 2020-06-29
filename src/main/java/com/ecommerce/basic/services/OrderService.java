@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Shrikant Sharma
@@ -22,6 +23,8 @@ public class OrderService {
 	private UserService userService;
 	@Autowired
 	private ProductService productService;
+	@Autowired
+	private CartService cartService;
 
 	public OrderItem createOrder(String userName, List<OrderRequest> orderRequest) {
 		User user = userService.findByUsername(userName);
@@ -83,29 +86,13 @@ public class OrderService {
 		return orderItem;
 	}
 
-	public OrderItem reOrderItem(String userName, long itemId) {
-		User user = userService.findByUsername(userName);
+	public CartItem reOrderItem(String userName, long itemId) {
 		OrderItem reOrderItem = getOrderItem(userName, itemId);
-		OrderItem orderItem = new OrderItem();
-		List<OrderDetail> orderDetails = new ArrayList<>();
-		long totalValue = 0;
-		for(OrderDetail detail : reOrderItem.getOrderDetails()) {
-			//TODO:: is detail.getProduct() still exist in our domain
-			try {
-				OrderDetail orderDetail = createOrderDetail(orderItem, detail.getProduct(), detail.getQuantity());
-				orderDetails.add(orderDetail);
-				totalValue += orderDetail.getProductTotal();
-			} catch (Exception e) {
-				System.out.println("Product does not exist now");
-				e.printStackTrace();
-			}
-		}
-
-		orderItem.setUser(user)
-				.setTotalValue(totalValue)
-				.setOrderDetails(orderDetails)
-				.setPlacedOn(LocalDateTime.now());
-
-		return orderItem;
+		List<CartDetailRequest> cartDetailRequests = reOrderItem.getOrderDetails()
+				.stream()
+				.filter(d -> !d.getProduct().isDeleted())
+				.map(d -> new CartDetailRequest(d.getProduct().getProductId(), d.getQuantity()))
+				.collect(Collectors.toList());
+		return cartService.addToCartBatch(userName,cartDetailRequests);
 	}
 }
