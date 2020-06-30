@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 @Entity @Table
 @Data @Accessors(chain = true)
-public class UserInfo implements Serializable {
+public class UserInfo /*implements Serializable*/ {
 	@Id
 	@GeneratedValue
 	private Long userInfoId;

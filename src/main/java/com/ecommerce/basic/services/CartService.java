@@ -1,6 +1,5 @@
 package com.ecommerce.basic.services;
 
-import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
 import com.ecommerce.basic.repositories.CartDetailRepository;
@@ -30,12 +29,7 @@ public class CartService {
 	@Autowired
 	private ProductService productService;
 
-	public CartItem getCartItem(String userName) {
-		User user = userService.findByUsername(userName);
-		return getCartItem(user);
-	}
-
-	private CartItem getCartItem(User user) {
+	public CartItem getCartItem(User user) {
 		CartItem cartItem = cartRepository.findByUser(user);
 		if(cartItem == null) {
 			return new CartItem()
@@ -81,8 +75,8 @@ public class CartService {
 		return cartItem;
 	}
 
-	public CartItem removeFromCart(String userName, long cartDetailId) {
-		CartItem cartItem = getCartItem(userName);
+	public CartItem removeFromCart(User user, long cartDetailId) {
+		CartItem cartItem = getCartItem(user);
 		CartDetail removedCartDetail = null;
 		for(CartDetail cartDetail : cartItem.getCartDetails()) {
 			if(cartDetail.getCartDetailId() == cartDetailId) {
@@ -92,7 +86,7 @@ public class CartService {
 			}
 		}
 		if(removedCartDetail == null) {
-			throw new NoSuchResourceException(NO_CART_DETAIL_IN_USER_EXCEPTION, "No cartDetailId:"+cartDetailId+" found for username: "+userName);
+			throw new NoSuchResourceException(NO_CART_DETAIL_IN_USER_EXCEPTION, "No cartDetailId:"+cartDetailId+" found for username: "+user.getUsername());
 		}
 		cartItem.setTotalValue(cartItem.getTotalValue() - removedCartDetail.getProductTotal())
 				.setLastModified(LocalDateTime.now());
@@ -108,14 +102,14 @@ public class CartService {
 		return optionalCartDetail.get();
 	}
 
-	public CartItem deleteCart(String userName) {
-		CartItem cartItem = getCartItem(userName);
+	public CartItem deleteCart(User user) {
+		CartItem cartItem = getCartItem(user);
 		cartRepository.delete(cartItem);
 		return cartItem;
 	}
 
-	public CartItem addToCart(String userName, CartDetailRequest detailRequest) {
-		CartItem cartItem = getCartItem(userName);
+	public CartItem addToCart(User user, CartDetailRequest detailRequest) {
+		CartItem cartItem = getCartItem(user);
 		List<CartDetail> cartDetails = cartItem.getCartDetails();
 		if(cartDetails == null){
 			cartDetails = new ArrayList<>();
@@ -149,8 +143,8 @@ public class CartService {
 		return cartItem;
 	}
 
-	public CartItem addToCartBatch(String userName, List<CartDetailRequest> cartDetailRequests) {
-		CartItem cartItem = getCartItem(userName);
+	public CartItem addToCartBatch(User user, List<CartDetailRequest> cartDetailRequests) {
+		CartItem cartItem = getCartItem(user);
 		List<CartDetail> cartDetails = cartItem.getCartDetails();
 		if(cartDetails == null){
 			cartDetails = new ArrayList<>();

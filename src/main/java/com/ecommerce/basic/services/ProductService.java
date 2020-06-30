@@ -90,7 +90,7 @@ public class ProductService {
 		return product;
 	}
 
-	public void deleteAllProducts(List<Product> products) {
+	public void markDeletedAllProducts(List<Product> products) {
 		int marked = productRepository.markAllProductDeleted(products);
 		System.err.println(marked+" products marked deleted");
 	}

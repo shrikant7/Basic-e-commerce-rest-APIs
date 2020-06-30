@@ -30,8 +30,7 @@ public class OrderService {
 	@Autowired
 	private CartService cartService;
 
-	public OrderItem createOrder(String userName, List<OrderRequest> orderRequest) {
-		User user = userService.findByUsername(userName);
+	public OrderItem createOrder(User user, List<OrderRequest> orderRequest) {
 		OrderItem orderItem = new OrderItem();
 		List<OrderDetail> orderDetails = new ArrayList<>();
 		long totalValue = 0;
@@ -60,8 +59,7 @@ public class OrderService {
 	}
 
 	//provides orderItems with details
-	public List<OrderItem> getOrderHistory(String userName, int offset, int limit) {
-		User user = userService.findByUsername(userName);
+	public List<OrderItem> getOrderHistory(User user, int offset, int limit) {
 		List<OrderItem> orderItems = user.getOrderItems();
 		orderItems.sort(Comparator.comparing(OrderItem::getPlacedOn).reversed());
 		int size = orderItems.size();
@@ -79,24 +77,24 @@ public class OrderService {
 		return Collections.emptyList();
 	}
 
-	public OrderItem getOrderItem(String userName, long orderId) {
+	public OrderItem getOrderItem(User user, long orderId) {
 		Optional<OrderItem> optionalOrderItem = orderRepository.findById(orderId);
 		optionalOrderItem.orElseThrow(() -> new NoSuchResourceException(NO_ORDER_EXCEPTION,"No order found for orderId: "+orderId));
 
 		OrderItem orderItem = optionalOrderItem.get();
-		if(!userName.equalsIgnoreCase(orderItem.getUser().getUsername())) {
-			throw new NoSuchResourceException(NO_ORDER_IN_USER_EXCEPTION, "OrderItem does not belongs to User: "+userName);
+		if(!user.getUsername().equalsIgnoreCase(orderItem.getUser().getUsername())) {
+			throw new NoSuchResourceException(NO_ORDER_IN_USER_EXCEPTION, "OrderItem does not belongs to User: "+user.getUsername());
 		}
 		return orderItem;
 	}
 
-	public CartItem reOrderItem(String userName, long itemId) {
-		OrderItem reOrderItem = getOrderItem(userName, itemId);
+	public CartItem reOrderItem(User user, long itemId) {
+		OrderItem reOrderItem = getOrderItem(user, itemId);
 		List<CartDetailRequest> cartDetailRequests = reOrderItem.getOrderDetails()
 				.stream()
 				.filter(d -> !d.getProduct().isDeleted())
 				.map(d -> new CartDetailRequest(d.getProduct().getProductId(), d.getQuantity()))
 				.collect(Collectors.toList());
-		return cartService.addToCartBatch(userName,cartDetailRequests);
+		return cartService.addToCartBatch(user,cartDetailRequests);
 	}
 }

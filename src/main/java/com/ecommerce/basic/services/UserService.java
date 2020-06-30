@@ -77,8 +77,8 @@ public class UserService {
 		return otp.toString();
 	}
 
-	public User verifyOtp(String userName, OtpVerificationRequest otpVerificationRequest) {
-		User user = findByUsername(userName);
+	public User verifyOtp(OtpVerificationRequest otpVerificationRequest) {
+		User user = findByUsername(otpVerificationRequest.getUsername());
 		Optional<Otp> optionalOtp = otpRepository.findByUser(user);
 		optionalOtp.orElseThrow(()-> new InvalidResourceName(OTP_EXPIRED_EXCEPTION, "Otp expired, please request again"));
 		Otp otp =optionalOtp.get();

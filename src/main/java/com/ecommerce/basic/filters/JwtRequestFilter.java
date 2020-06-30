@@ -23,16 +23,15 @@ import java.io.IOException;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
 	@Autowired
-	private MyUserDetailsService userDetailsService;
-
-	@Autowired
 	private JwtUtil jwtTokenUtil;
+	@Autowired
+	private MyUserDetailsService userDetailsService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-			throws ServletException, IOException {
+																				throws ServletException, IOException {
+		//get Authorization header for authentication of request
 		final String authorizationHeader = request.getHeader("Authorization");
-
 		String username = null;
 		String jwt = null;
 
@@ -47,9 +46,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 				UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
 						userDetails,null,userDetails.getAuthorities());
 				usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				//add authenticationToken in SecurityContextHolder
 				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 			}
 		}
+
+		//done with this, carry on with further filters
 		chain.doFilter(request,response);
 	}
 }

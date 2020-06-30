@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -55,114 +57,40 @@ public class HomeResource {
 	private MailSenderService mailSenderService;
 	@Value("${host-address}")
 	private String hostAddress;
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	ObjectMapper objectMapper = new ObjectMapper();
-
-	@GetMapping("/user")
-	public String user(){
-		return "Hello user";
-	}
-
-	@GetMapping("/users")
+	@GetMapping("/admin/users")
 	public List<User> getAllUsers() {
 		return userService.getAllUsers();
 	}
 
-	@GetMapping("users/{userName}")
-	public User getUserByUsername(@PathVariable String userName) {
-		return userService.findByUsername(userName);
+	@GetMapping("/admin/users/{username}")
+	public User getUserByUsername(@PathVariable String username) {
+		return userService.findByUsername(username);
 	}
 
-	@GetMapping("/users/{userName}/user-info")
-	public UserInfo getUserInfoByUsername(@PathVariable String userName) {
-		return userService.getUserInfoByUsername(userName);
+	@GetMapping("/admin/users/{username}/user-info")
+	public UserInfo getUserInfoByUsername(@PathVariable String username) {
+		return userService.getUserInfoByUsername(username);
 	}
 
-	@PostMapping("users/{userName}/generate-otp")
-	public MailDTO generateOtp(@PathVariable String userName) {
-		Otp otp = userService.generateOtp(userName);
+	@PostMapping("/admin/users/{username}/authenticate")
+	public ResponseEntity<?> getAuthenticationForUser(@PathVariable("username") String username) {
+		User user = userService.findByUsername(username);
+		return ResponseEntity.ok(createAuthenticationResponse(user));
+	}
+
+	@PostMapping("/generate-otp")
+	public MailDTO generateOtp(@RequestBody Map<String, String> body) {
+		Otp otp = userService.generateOtp(body.get("username"));
 		String email = userService.getUserInfoByUser(otp.getUser()).getEmail();
 		mailSenderService.sendSimpleMailOtpToUserCloud(otp,email);
 		return new MailDTO(email);
 	}
 
-	@PostMapping("users/{userName}/verify-otp")
-	public ResponseEntity<?> verifyOtp(@PathVariable String userName,
-	                                   @RequestBody OtpVerificationRequest otpVerificationRequest) {
-		User user = userService.verifyOtp(userName, otpVerificationRequest);
-		return ResponseEntity.ok(createAuthenticationResponse(user));
-	}
-
-	@GetMapping("users/{userName}/cart")
-	public CartItem getCart(@PathVariable String userName) {
-		return cartService.getCartItem(userName);
-	}
-
-	@DeleteMapping("users/{userName}/cart")
-	public CartItem deleteCart(@PathVariable String userName) {
-		return cartService.deleteCart(userName);
-	}
-
-	@PostMapping("users/{userName}/cart/cart-detail")
-	public CartItem createCartDetail(@PathVariable String userName,
-	                          @Valid @RequestBody CartDetailRequest detailRequest) {
-		return cartService.addToCart(userName, detailRequest);
-	}
-
-	@DeleteMapping("users/{userName}/cart/cart-detail/{cartDetailId}")
-	public CartItem deleteCartDetail(@PathVariable("userName") String userName,
-	                               @PathVariable("cartDetailId") long cartDetailId) {
-		return cartService.removeFromCart(userName, cartDetailId);
-	}
-
-	@PostMapping("/users/{userName}/checkout")
-	public OrderItem createOrder(@PathVariable("userName") String userName,
-	                             @Valid @RequestBody List<OrderRequest> orderRequest) {
-		OrderItem orderItem = orderService.createOrder(userName, orderRequest);
-		mailSenderService.sendSimpleMailToAdminCloud(orderItem);
-		return orderItem;
-	}
-
-	@GetMapping("/users/{userName}/order-history")
-	public List<OrderItem> getOrderHistory(@PathVariable("userName") String userName,
-	                                       @RequestParam(value = "offset", defaultValue = "0") int offset,
-	                                       @RequestParam(value = "limit", defaultValue = "0") int limit) {
-		return orderService.getOrderHistory(userName, offset, limit);
-	}
-
-	@GetMapping("/users/{userName}/orderItems")
-	public List<OrderItemDto> getOnlyOrderItems(@PathVariable("userName") String userName,
-	                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
-	                                            @RequestParam(value = "limit", defaultValue = "0") int limit) {
-		List<OrderItem> orderHistory = orderService.getOrderHistory(userName, offset, limit);
-		return orderHistory.stream().map(Utils::mapToOrderItemDto).collect(Collectors.toList());
-	}
-
-	@GetMapping("/users/{userName}/orderItems/{itemId}")
-	public List<OrderDetailDto> getOrderDetail(@PathVariable("userName") String userName,
-	                                     @PathVariable("itemId") long orderId) {
-		OrderItem orderItem = orderService.getOrderItem(userName, orderId);
-		return orderItem.getOrderDetails().stream().map(Utils::mapToOrderDetailDto).collect(Collectors.toList());
-	}
-
-	//add now available products to cart from orderItem
-	@PostMapping("/users/{userName}/reorder/{itemId}")
-	public CartItem reOrderItem(@PathVariable("userName") String userName,
-	                             @PathVariable("itemId") long itemId) {
-		return orderService.reOrderItem(userName, itemId);
-	}
-
-	@PostMapping("/authenticate")
-	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
-		try {
-			authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
-			);
-		}catch (BadCredentialsException e){
-			throw new Exception("Incorrect username or password",e);
-		}
-
-		final User user = userService.findByUsername(authenticationRequest.getUsername());
+	@PostMapping("/verify-otp")
+	public ResponseEntity<?> verifyOtp(@Valid @RequestBody OtpVerificationRequest otpVerificationRequest) {
+		User user = userService.verifyOtp(otpVerificationRequest);
 		return ResponseEntity.ok(createAuthenticationResponse(user));
 	}
 
@@ -172,39 +100,124 @@ public class HomeResource {
 		return ResponseEntity.ok(createAuthenticationResponse(user));
 	}
 
-	@GetMapping("/categories")
+	@PostMapping("/authenticate")
+	public ResponseEntity<?> createAuthenticationToken(
+									@Valid @RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+		try {
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(),
+															authenticationRequest.getPassword()));
+		}catch (BadCredentialsException e){
+			throw new Exception("Incorrect username or password",e);
+		}
+
+		final User user = userService.findByUsername(authenticationRequest.getUsername());
+		return ResponseEntity.ok(createAuthenticationResponse(user));
+	}
+
+	@GetMapping("/user")
+	public User getUser() {
+		return getPrincipalUser();
+	}
+
+	@GetMapping("/user/user-info")
+	public UserInfo getUserInfo() {
+		return userService.getUserInfoByUser(getPrincipalUser());
+	}
+
+	@GetMapping("/user/cart")
+	public CartItem getCart() {
+		User user = getPrincipalUser();
+		return cartService.getCartItem(user);
+	}
+
+	@DeleteMapping("/user/cart")
+	public CartItem deleteCart() {
+		return cartService.deleteCart(getPrincipalUser());
+	}
+
+	@PostMapping("/user/cart/cart-detail")
+	public CartItem createCartDetail(@Valid @RequestBody CartDetailRequest detailRequest) {
+		User user = getPrincipalUser();
+		return cartService.addToCart(user, detailRequest);
+	}
+
+	@DeleteMapping("/user/cart/cart-detail/{cartDetailId}")
+	public CartItem deleteCartDetail(@PathVariable("cartDetailId") long cartDetailId) {
+		User user = getPrincipalUser();
+		return cartService.removeFromCart(user, cartDetailId);
+	}
+
+	@PostMapping("/user/checkout")
+	public OrderItem createOrder(@Valid @RequestBody List<OrderRequest> orderRequest) {
+		User user = getPrincipalUser();
+		OrderItem orderItem = orderService.createOrder(user, orderRequest);
+		mailSenderService.sendSimpleMailToAdminCloud(orderItem);
+		return orderItem;
+	}
+
+	@GetMapping("/user/order-history")
+	public List<OrderItem> getOrderHistory(@RequestParam(value = "offset", defaultValue = "0") int offset,
+	                                       @RequestParam(value = "limit", defaultValue = "0") int limit) {
+		User user = getPrincipalUser();
+		return orderService.getOrderHistory(user, offset, limit);
+	}
+
+	@GetMapping("/user/order-items")
+	public List<OrderItemDto> getOnlyOrderItems(@RequestParam(value = "offset", defaultValue = "0") int offset,
+	                                            @RequestParam(value = "limit", defaultValue = "0") int limit) {
+		User user = getPrincipalUser();
+		List<OrderItem> orderHistory = orderService.getOrderHistory(user, offset, limit);
+		return orderHistory.stream().map(Utils::mapToOrderItemDto).collect(Collectors.toList());
+	}
+
+	@GetMapping("/user/order-items/{itemId}")
+	public List<OrderDetailDto> getOrderDetail(@PathVariable("itemId") long orderId) {
+		User user = getPrincipalUser();
+		OrderItem orderItem = orderService.getOrderItem(user, orderId);
+		return orderItem.getOrderDetails().stream().map(Utils::mapToOrderDetailDto).collect(Collectors.toList());
+	}
+
+	//add now available products to cart from orderItem
+	@PostMapping("/user/reorder/{itemId}")
+	public CartItem reOrderItem(@PathVariable("itemId") long itemId) {
+		User user = getPrincipalUser();
+		return orderService.reOrderItem(user, itemId);
+	}
+
+	@GetMapping("/user/categories")
 	public List<Category> getAllCategories() {
 		return categoryService.getAllCategories();
 	}
 
-	@GetMapping("categories/{categoryName}")
+	@GetMapping("/user/categories/{categoryName}")
 	public Category getCategoryByName(@PathVariable String categoryName) {
 		return categoryService.getCategoryByName(categoryName);
 	}
 
-	@PostMapping("/categories")
+	@PostMapping("/admin/categories")
 	public Category createCategory(@RequestParam("categoryName") String categoryName) {
 		return categoryService.createCategory(new Category().setCategoryName(categoryName));
 	}
 
-	@PutMapping("/categories/{categoryName}")
+	@PutMapping("/admin/categories/{categoryName}")
 	public Category updateCategory(@PathVariable String categoryName,@Valid @RequestBody Category newCategory) {
 		return categoryService.updateCategory(categoryName, newCategory);
 	}
 
-	@DeleteMapping("/categories/{categoryName}")
+	@DeleteMapping("/admin/categories/{categoryName}")
 	public Category deleteCategory(@PathVariable String categoryName) {
 		Category category = categoryService.deleteCategory(categoryName);
 		//imageStorageService.deleteAllImages(category.getCategoryId());
 		return category;
 	}
 
-	@GetMapping("/categories/{categoryName}/products")
+	@GetMapping("/user/categories/{categoryName}/products")
 	public List<Product> getAllProductsOfCategory(@PathVariable("categoryName") String categoryName) {
 		return categoryService.getAllProductsOfCategoryName(categoryName);
 	}
 
-	@PostMapping(value = "/categories/{categoryName}/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/admin/categories/{categoryName}/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Product createProduct(
 			@PathVariable("categoryName") String categoryName,
 			@RequestParam("productJson") String productJson,
@@ -228,13 +241,13 @@ public class HomeResource {
 										.path(imageName).toUriString();
 	}
 
-	@GetMapping("/categories/{categoryName}/products/{productId}")
+	@GetMapping("/user/categories/{categoryName}/products/{productId}")
 	public Product getSingleProduct(@PathVariable("categoryName") String categoryName,
 	                                @PathVariable("productId") long productId) {
 		return productService.getProductUnderCategory(categoryName, productId);
 	}
 
-	@PutMapping(value = "/categories/{categoryName}/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PutMapping(value = "/admin/categories/{categoryName}/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Product updateSingleProduct(@PathVariable("categoryName") String categoryName,
 	                                   @PathVariable("productId") long productId,
 	                                   @RequestParam(value = "productJson", required = false) String productJson,
@@ -291,7 +304,7 @@ public class HomeResource {
 		return productService.updateSingleProduct(product, newProduct);
 	}
 
-	@DeleteMapping("/categories/{categoryName}/products/{productId}")
+	@DeleteMapping("/admin/categories/{categoryName}/products/{productId}")
 	public Product deleteSingleProduct(@PathVariable("categoryName") String categoryName,
 	                                   @PathVariable("productId") long productId) {
 		Product product = productService.deleteProductByCategory(categoryName, productId);
@@ -299,17 +312,17 @@ public class HomeResource {
 		return product;
 	}
 
-	@GetMapping("/highlights")
+	@GetMapping("/user/highlights")
 	public List<Highlight> getAllHighlights() {
 		return highlightService.getAllHighlights();
 	}
 
-	@PostMapping("/highlights")
+	@PostMapping("/admin/highlights")
 	public Highlight createHighlight(@RequestParam long productId) {
 		return highlightService.createHighlight(productId);
 	}
 
-	@DeleteMapping("/highlights/{highlightId}")
+	@DeleteMapping("/admin/highlights/{highlightId}")
 	public Highlight deleteHighlight(@PathVariable("highlightId") long highlightId) {
 		return highlightService.deleteHighlight(highlightId);
 	}
@@ -334,5 +347,10 @@ public class HomeResource {
 		final UserWithInfoDto userWithInfoDto = Utils.mapToUserWithInfoDto(user,userInfo);
 		final String jwt = jwtTokenUtil.generateToken(user.getUsername());
 		return new AuthenticationResponse(jwt, userWithInfoDto);
+	}
+
+	//get authenticated user
+	private User getPrincipalUser() {
+		return ((MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUser();
 	}
 }

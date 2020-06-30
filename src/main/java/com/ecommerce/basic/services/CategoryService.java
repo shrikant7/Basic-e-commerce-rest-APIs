@@ -77,7 +77,7 @@ public class CategoryService {
 	public Category deleteCategory(String categoryName) {
 		Category category = getCategoryByName(categoryName);
 		// marking all products of category deleted
-		productService.deleteAllProducts(category.getProducts());
+		productService.markDeletedAllProducts(category.getProducts());
 
 		//changing category name to random so that user can use this name again and be safe from Unique name constraint
 		category.setCategoryName(getRandomName());
