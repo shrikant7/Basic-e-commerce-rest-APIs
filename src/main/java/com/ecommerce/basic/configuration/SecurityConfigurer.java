@@ -39,8 +39,8 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable().authorizeRequests()
 
-				//all admin prefixed apis should have admin role
-				.antMatchers("/api/admin/**").hasRole("ADMIN")
+				//all admin prefixed apis should have admin role access
+				.antMatchers("/api/admin/**","/home","/category").hasRole("ADMIN")
 
 				//and for all other request, please authenticate with any role user or admin
 				.antMatchers("/api/user/**").hasAnyRole("USER","ADMIN")
