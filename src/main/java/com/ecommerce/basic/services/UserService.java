@@ -96,7 +96,7 @@ public class UserService {
 						.setUsername(signUpRequest.getUsername())
 						.setPassword(passwordEncoder.encode(signUpRequest.getPassword()))
 						.setActive(true)
-						.setRoles(signUpRequest.getRole());
+						.setRoles(User.ROLE_USER);
 		UserInfo userInfo = new UserInfo()
 				.setFullName(signUpRequest.getFullName())
 				.setPhoneNumber(signUpRequest.getPhoneNumber())
@@ -106,12 +106,6 @@ public class UserService {
 				.setPincode(signUpRequest.getPincode())
 				.setState(signUpRequest.getState())
 				.setUser(user);
-
-		if(user.getRoles() == null) {
-			user.setRoles(User.ROLE_USER);
-		} else if(!user.getRoles().equalsIgnoreCase(User.ROLE_ADMIN) && !user.getRoles().equalsIgnoreCase(User.ROLE_USER)) {
-			throw new InvalidResourceName(INVALID_USER_ROLE, "User's role is not valid");
-		}
 
 		validateBean(user);
 		validateBean(userInfo);
@@ -131,5 +125,18 @@ public class UserService {
 	public UserInfo getUserInfoByUsername(String userName) {
 		User user = findByUsername(userName);
 		return getUserInfoByUser(user);
+	}
+
+	public User changeAuthorizationOfUser(String username, String role) {
+		User user = findByUsername(username);
+		String existingRole = user.getRoles();
+		if(!role.equals(User.ROLE_ADMIN) && !role.equals(User.ROLE_USER)) {
+			throw new InvalidResourceName(INVALID_USER_ROLE, "User's role is not valid");
+		}
+		if(!existingRole.equals(role)) {
+			user.setRoles(role);
+			user = userRepository.saveAndFlush(user);
+		}
+		return user;
 	}
 }

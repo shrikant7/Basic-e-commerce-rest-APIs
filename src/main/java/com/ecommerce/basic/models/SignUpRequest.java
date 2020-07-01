@@ -21,8 +21,6 @@ public class SignUpRequest {
 	@Size(message = "Password's length can't be less than 4")
 	String password;
 
-	String role;
-
 	@NotBlank(message = "FullName can't be blank")
 	String fullName;
 

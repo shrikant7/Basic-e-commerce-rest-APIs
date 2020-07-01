@@ -35,7 +35,8 @@ public class DefaultExceptionHandler extends ResponseEntityExceptionHandler {
 		return getResponseEntity(e.getMessage(), status, e.getErrorCode().ordinal());
 	}
 
-	@ExceptionHandler(value = {InvalidFileExtension.class, InvalidResourceName.class, UniqueKeyViolationException.class})
+	@ExceptionHandler(value = {InvalidFileExtension.class, InvalidResourceName.class,
+								InvalidCredentialException.class, UniqueKeyViolationException.class})
 	public ResponseEntity<?> handleBadRequestException(BaseException e) {
 		HttpStatus status = HttpStatus.BAD_REQUEST;
 		return getResponseEntity(e.getMessage(), status, e.getErrorCode().ordinal());

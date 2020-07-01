@@ -8,6 +8,7 @@ public class ErrorConstant {
         FILE_STORAGE_EXCEPTION("Could not store image, server error"),
         INVALID_IMAGE_EXTENSION("INVALID name/extension of Image"),
 
+        BAD_CREDENTIAL_EXCEPTION("Incorrect username or password"),
         INVALID_USER_ROLE("User's role is not valid"),
         BEAN_VALIDATION_EXCEPTION("Bean validation failed"),
         OTP_VERIFICATION_FAILED("OTP verification failed"),
@@ -37,10 +38,10 @@ public class ErrorConstant {
         EXCEPTION("Exception");
 
         private final String hint;
-        private ErrorCode(String hint){
+        ErrorCode(String hint){
             this.hint = hint;
         }
-        public String getMessage(){
+        public String getHint(){
             return hint;
         }
         };
