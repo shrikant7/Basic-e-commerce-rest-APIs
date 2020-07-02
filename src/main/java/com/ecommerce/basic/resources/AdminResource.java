@@ -6,12 +6,10 @@ import com.ecommerce.basic.utils.JwtUtil;
 import com.ecommerce.basic.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.io.IOException;
@@ -37,8 +35,6 @@ public class AdminResource {
     @Autowired
     private ImageStorageService imageStorageService;
 
-    @Value("${host-address}")
-    private String hostAddress;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private AuthenticationResponse createAuthenticationResponse(User user) {
@@ -46,13 +42,6 @@ public class AdminResource {
         final UserWithInfoDto userWithInfoDto = Utils.mapToUserWithInfoDto(user,userInfo);
         final String jwt = jwtTokenUtil.generateToken(user.getUsername());
         return new AuthenticationResponse(jwt, userWithInfoDto);
-    }
-
-    private String storeAndGetImageUri(long categoryId, MultipartFile productImage) {
-        String imageName = imageStorageService.storeImage(categoryId, productImage);
-        return ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
-                .path("api/downloadImage/")
-                .path(imageName).toUriString();
     }
 
     @GetMapping("/users")
@@ -116,7 +105,7 @@ public class AdminResource {
             @RequestParam("file") MultipartFile productImage) throws IOException {
 
         Category category = categoryService.getCategoryByName(categoryName);
-        String imageDownloadURI = storeAndGetImageUri(category.getCategoryId(), productImage);
+        String imageDownloadURI = imageStorageService.storeImage(category.getCategoryId(), productImage);
 
         Product product = objectMapper.readValue(productJson,Product.class)
                 .setCategory(category)
@@ -126,8 +115,14 @@ public class AdminResource {
         return productService.createProduct(product);
     }
 
-    @PutMapping(value = "/categories/{categoryName}/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Product updateSingleProduct(@PathVariable("categoryName") String categoryName,
+    @PostMapping("/categories/{categoryName}/move-products")
+    public Category moveProductsToNewCategory(@PathVariable("categoryName") String categoryName,
+                                              @RequestBody ProductIdsDTO productIdsDTO) {
+        return productService.moveProductsToCategory(categoryName, productIdsDTO.getProductIds());
+    }
+
+    @PatchMapping(value = "/categories/{categoryName}/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Product editSingleProduct(@PathVariable("categoryName") String categoryName,
                                        @PathVariable("productId") long productId,
                                        @RequestParam(value = "productJson", required = false) String productJson,
                                        @RequestParam(value = "file", required = false) MultipartFile productImage) throws IOException {
@@ -160,13 +155,8 @@ public class AdminResource {
                 Category category = categoryService.getCategoryByName(newProduct.getCategory().getCategoryName());
                 newProduct.setCategory(category);
                 if (!category.getCategoryName().equalsIgnoreCase(categoryName)) {
-                    String[] split = product.getImageUri().split("/");
-                    String imageName = split[split.length - 1];
-                    String newImageName = imageStorageService.moveImage(imageName, category.getCategoryId());
-                    String imageDownloadURI = ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
-                            .path("api/downloadImage/")
-                            .path(newImageName).toUriString();
-                    newProduct.setImageUri(imageDownloadURI);
+                    String newImageDownloadURI = imageStorageService.moveImage(product.getImageUri(), category.getCategoryId());
+                    newProduct.setImageUri(newImageDownloadURI);
                 }
             } else {
                 newProduct.setCategory(product.getCategory());
@@ -177,7 +167,7 @@ public class AdminResource {
 
         if(productImage != null && !productImage.isEmpty()) {
             imageStorageService.deleteImage(product.getImageUri());
-            String imageDownloadURI = storeAndGetImageUri(newProduct.getCategory().getCategoryId(), productImage);
+            String imageDownloadURI = imageStorageService.storeImage(newProduct.getCategory().getCategoryId(), productImage);
             newProduct.setImageUri(imageDownloadURI);
         }
         return productService.updateSingleProduct(product, newProduct);

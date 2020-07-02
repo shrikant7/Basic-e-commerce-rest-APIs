@@ -1,8 +1,8 @@
 package com.ecommerce.basic.services;
 
-import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.InvalidResourceName;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
+import com.ecommerce.basic.models.Category;
 import com.ecommerce.basic.models.Product;
 import com.ecommerce.basic.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,8 @@ import static com.ecommerce.basic.utils.Utils.validateBean;
 public class ProductService {
 	@Autowired
 	CartService cartService;
+	@Autowired
+	CategoryService categoryService;
 	@Autowired
 	HighlightService highlightService;
 	@Autowired
@@ -71,6 +73,19 @@ public class ProductService {
 		validateBean(product);
 		productRepository.saveAndFlush(product);
 		return product;
+	}
+
+	public Category moveProductsToCategory(String categoryName, List<Long> productIds) {
+		Category category = categoryService.getCategoryByName(categoryName);
+		List<Product> products = productRepository.findAllById(productIds);
+		products.forEach(p->{
+			p.setImageUri(
+					imageStorageService.moveImage(p.getImageUri(), category.getCategoryId()));
+			p.setCategory(category);
+		});
+		productRepository.saveAll(products);
+		productRepository.flush();
+		return category;
 	}
 
 	//soft deleting products; marking them deleted

@@ -4,6 +4,7 @@ import com.ecommerce.basic.exceptions.FileStorageException;
 import com.ecommerce.basic.exceptions.InvalidFileExtension;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.CopyWriter;
 import com.google.cloud.storage.Storage;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.core.io.WritableResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.OutputStream;
 
@@ -30,6 +32,8 @@ public class ImageStorageService {
 	private String bucket;
 	@Value("${gcs-resource-path}")
 	private String cloudStoragePath;
+	@Value("${host-address}")
+	private String hostAddress;
 	@Autowired
 	Storage storage;
 	@Autowired
@@ -51,7 +55,9 @@ public class ImageStorageService {
 			try (OutputStream os = ((WritableResource) gcsImage).getOutputStream()) {
 				os.write(pictureBytes);
 			}
-			return newImageName;
+			return ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
+					.path("api/downloadImage/")
+					.path(newImageName).toUriString();
 		} catch (Exception e) {
 			throw new FileStorageException(FILE_STORAGE_EXCEPTION, "Could not store image. Please try again", e);
 		}
@@ -69,16 +75,23 @@ public class ImageStorageService {
 	}
 
 	@SneakyThrows
-	public String moveImage(String imageName, long newCategoryId) {
-		String[] split = imageName.split("_");
+	public String moveImage(String imageUri, long newCategoryId) {
+		String[] split = imageUri.split("/");
+		String imageName = split[split.length - 1];
+		split = imageName.split("_");
 		String categoryId = split[0];
 		String extension = split[1].split("[.]")[1];
 		String newImageName = newCategoryId + "_" + System.currentTimeMillis() + "." + extension;
 
 		String imagePath = cloudStoragePath + "/" + categoryId + "/" + imageName;
 		GoogleStorageResource resource = (GoogleStorageResource) context.getResource(imagePath);
-		resource.getBlob().copyTo(String.valueOf(newCategoryId), newImageName);
-		return newImageName;
+		Blob blob = resource.getBlob();
+		CopyWriter copyWriter = blob.copyTo(bucket, newCategoryId+"/"+newImageName);
+		Blob copiedBlob = copyWriter.getResult();
+   		boolean deleted = blob.delete();
+		return ServletUriComponentsBuilder.fromHttpUrl(hostAddress)
+				.path("api/downloadImage/")
+				.path(newImageName).toUriString();
 	}
 
 	@SneakyThrows

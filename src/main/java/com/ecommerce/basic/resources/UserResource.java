@@ -38,7 +38,7 @@ public class UserResource {
         return ((MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUser();
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     public User getUser() {
         return getPrincipalUser();
     }
