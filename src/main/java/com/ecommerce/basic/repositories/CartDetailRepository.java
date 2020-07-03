@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * @author Shrikant Sharma
  */
@@ -17,8 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface CartDetailRepository extends JpaRepository<CartDetail, Long> {
     @Modifying
-    @Query(value = "DELETE FROM CartDetail WHERE product = :product")
-    int deleteByProductQuery(@Param("product") Product product);
+    @Query(value = "DELETE FROM CartDetail c WHERE c.product IN :products")
+    int deleteCartDetailsHaveProducts(@Param("products") List<Product> products);
 
     //above can be done by JPA deleteBy... query derivation
     //int deleteByProduct(Product product);

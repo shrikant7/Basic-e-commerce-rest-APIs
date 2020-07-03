@@ -23,6 +23,8 @@ public class ProductService {
 	@Autowired
 	CartService cartService;
 	@Autowired
+	OrderService orderService;
+	@Autowired
 	CategoryService categoryService;
 	@Autowired
 	HighlightService highlightService;
@@ -108,5 +110,18 @@ public class ProductService {
 	public void markDeletedAllProducts(List<Product> products) {
 		int marked = productRepository.markAllProductDeleted(products);
 		System.err.println(marked+" products marked deleted");
+	}
+
+	public void deleteMarkedUnreferencedProducts() {
+		List<Product> deletedMarkedProducts = productRepository.findAllByDeleted(true);
+		//delete highlights which have deleted marked products
+		highlightService.deleteProductsFromAnyHighlight(deletedMarkedProducts);
+		//delete cartDetails which have deleted marked products
+		cartService.deleteProductsFromAnyCartDetail(deletedMarkedProducts);
+		//filter out deleted marked products which are not part of any orderDetail
+		deletedMarkedProducts = orderService.filterProductsNotPresentInOrderDetail(deletedMarkedProducts);
+		productRepository.deleteAll(deletedMarkedProducts);
+		deletedMarkedProducts.forEach(p->imageStorageService.deleteImage(p.getImageUri()));
+		System.err.println("deletedProducts: "+deletedMarkedProducts.size());
 	}
 }

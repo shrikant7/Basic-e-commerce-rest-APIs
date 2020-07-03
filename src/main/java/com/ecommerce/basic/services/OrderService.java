@@ -1,10 +1,9 @@
 package com.ecommerce.basic.services;
 
-import com.ecommerce.basic.exceptions.ErrorConstant;
 import com.ecommerce.basic.exceptions.NoSuchResourceException;
 import com.ecommerce.basic.models.*;
+import com.ecommerce.basic.repositories.OrderDetailRepository;
 import com.ecommerce.basic.repositories.OrderRepository;
-import com.ecommerce.basic.resources.HomeResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +22,8 @@ import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.NO_ORDER_IN
 public class OrderService {
 	@Autowired
 	private OrderRepository orderRepository;
+	@Autowired
+	private OrderDetailRepository orderDetailRepository;
 	@Autowired
 	private UserService userService;
 	@Autowired
@@ -96,5 +97,14 @@ public class OrderService {
 				.map(d -> new CartDetailRequest(d.getProduct().getProductId(), d.getQuantity()))
 				.collect(Collectors.toList());
 		return cartService.addToCartBatch(user,cartDetailRequests);
+	}
+
+	public List<Product> filterProductsNotPresentInOrderDetail(List<Product> deletedMarkedProducts) {
+		List<OrderDetail> orderDetailsWithDeletedProduct = orderDetailRepository.findAllByProductIn(deletedMarkedProducts);
+		List<Product> deletedProductsPresentInOrderDetails = orderDetailsWithDeletedProduct.stream()
+																		.map(OrderDetail::getProduct)
+																		.collect(Collectors.toList());
+		deletedMarkedProducts.removeAll(deletedProductsPresentInOrderDetails);
+		return deletedMarkedProducts;
 	}
 }

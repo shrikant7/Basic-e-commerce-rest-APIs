@@ -20,4 +20,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query(value = "UPDATE Product p SET p.deleted=true WHERE p IN :products")
     int markAllProductDeleted(@Param("products") List<Product> products);
+
+    List<Product> findAllByDeleted(boolean deleted);
 }

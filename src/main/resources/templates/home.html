@@ -73,7 +73,7 @@
     <br/>
     <script>
         function getProductDetails() {
-            $.ajax({url: "/api/categories/Icecreams/products", success: function(result){
+            $.ajax({url: "/api/user/categories/Icecreams/products", success: function(result){
                 $(".table tbody").html('');
                 if(result.length>0) {
                     $.each(result, function( index, value ) {
@@ -104,7 +104,7 @@
                 $.ajax({
                     type: "POST",
                     enctype: 'multipart/form-data',
-                    url: "/api/categories/"+categoryName+"/products",
+                    url: "/api/admin/categories/"+categoryName+"/products",
                     data: data,
                     processData: false,
                     contentType: false,

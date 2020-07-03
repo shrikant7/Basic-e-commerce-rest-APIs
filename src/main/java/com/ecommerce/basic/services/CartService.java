@@ -179,8 +179,8 @@ public class CartService {
 	}
 
 
-	public void deleteProductFromAnyCartDetail(Product product) {
-		int deletedRow = cartDetailRepository.deleteByProductQuery(product);
-		//System.err.println("deletedRow: "+deletedRow);
+	public void deleteProductsFromAnyCartDetail(List<Product> product) {
+		int deletedRow = cartDetailRepository.deleteCartDetailsHaveProducts(product);
+		//System.err.println("deletedCartDetails: "+deletedRow);
 	}
 }

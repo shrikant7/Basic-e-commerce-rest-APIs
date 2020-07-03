@@ -61,8 +61,8 @@ public class HighlightService {
 		return highlight;
 	}
 
-	public void deleteProductFromAnyHighlight(Product product) {
-		int deletedHighlight = highlightRepository.deleteByHighlightedProduct(product);
-		//System.err.println("deletedHighlight: "+deletedHighlight);
+	public void deleteProductsFromAnyHighlight(List<Product> product) {
+		int deletedHighlight = highlightRepository.deleteHighlightsHaveProducts(product);
+		//System.err.println("deletedHighlights: "+deletedHighlight);
 	}
 }

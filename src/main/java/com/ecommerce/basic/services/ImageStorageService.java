@@ -20,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.OutputStream;
 
+import static com.ecommerce.basic.BasicApplication.backgroundService;
 import static com.ecommerce.basic.exceptions.ErrorConstant.ErrorCode.*;
 
 /**
@@ -109,10 +110,10 @@ public class ImageStorageService {
 				e.printStackTrace();
 			}
 		};
-		new Thread(runnable).start();
+		backgroundService.execute(runnable);
 	}
 
-	public void deleteAllImages(int categoryId) {
+	public void deleteAllImagesInCategory(int categoryId) {
 		Runnable runnable = () -> {
 			Iterable<Blob> blobs = storage.list(bucket, Storage.BlobListOption.currentDirectory(),
 					Storage.BlobListOption.prefix(categoryId + "/")).iterateAll();
@@ -120,6 +121,6 @@ public class ImageStorageService {
 				blob.delete();
 			}
 		};
-		new Thread(runnable).start();
+		backgroundService.execute(runnable);
 	}
 }

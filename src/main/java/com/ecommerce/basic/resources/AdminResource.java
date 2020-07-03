@@ -115,6 +115,7 @@ public class AdminResource {
         return productService.createProduct(product);
     }
 
+    //products should be in range of 60~80, as each request has to complete in 60 secs
     @PostMapping("/categories/{categoryName}/move-products")
     public Category moveProductsToNewCategory(@PathVariable("categoryName") String categoryName,
                                               @RequestBody ProductIdsDTO productIdsDTO) {
