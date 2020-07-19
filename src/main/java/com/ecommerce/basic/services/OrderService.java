@@ -60,8 +60,10 @@ public class OrderService {
 	}
 
 	//provides orderItems with details
+	//TODO: move offset and limit to query itself
+	//TODO: separate out only orderItems and orderItems With details
 	public List<OrderItem> getOrderHistory(User user, int offset, int limit) {
-		List<OrderItem> orderItems = user.getOrderItems();
+		List<OrderItem> orderItems = orderRepository.getOrderItemWithDetailByUser(user);
 		orderItems.sort(Comparator.comparing(OrderItem::getPlacedOn).reversed());
 		int size = orderItems.size();
 

@@ -9,7 +9,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * @author Shrikant Sharma
@@ -37,9 +36,4 @@ public class User implements Serializable {
 
 	private boolean active;
 	private String roles;
-
-	@JsonIgnore
-	@ToString.Exclude
-	@OneToMany(mappedBy = "user")
-	private List<OrderItem> orderItems;
 }
